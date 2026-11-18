@@ -1,0 +1,36 @@
+[package]
+name = "snapit"
+version = "0.1.0"
+description = "Lightshot-style screenshot tool"
+edition = "2024"
+
+[lib]
+name = "snapit_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+# pinned: newer releases are < 7 days old (org policy)
+tauri-build = { version = "=2.7.4", features = [] }
+
+[dependencies]
+tauri = { version = "=2.12.5", features = ["tray-icon"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+xcap = "0.9.10"
+image = { version = "0.25", default-features = false, features = ["png"] }
+tauri-plugin-dialog = "2.8.4"
+tauri-plugin-clipboard-manager = "2.5.0"
+chrono = { version = "0.4.45", default-features = false, features = ["clock"] }
+tauri-plugin-single-instance = "2.5.5"
+tauri-plugin-global-shortcut = "2.4.1"
+tauri-plugin-autostart = "2.7.0"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+panic = "abort"
+strip = true
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2-app-kit = { version = "0.3", features = ["NSWindow", "NSResponder"] }

@@ -1,0 +1,10 @@
+dist
+node_modules
+src-tauri/target
+src-tauri/gen
+docs
+*.md
+package-lock.json
+_site
+docs/.vitepress/dist
+docs/.vitepress/cache

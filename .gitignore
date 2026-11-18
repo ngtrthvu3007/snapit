@@ -4,3 +4,8 @@ src-tauri/target
 src-tauri/gen/schemas
 .superpowers
 .DS_Store
+.playwright-mcp
+docs/.vitepress/dist
+docs/.vitepress/cache
+_site
+.taste-skill
