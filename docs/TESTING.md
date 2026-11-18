@@ -1,83 +1,59 @@
-# Manual test checklist
+# Checklist test tay
 
-Things automated tests can't cover. Run on a Mac with Screen Recording allowed (not the company Mac) and on Ubuntu 26.04 (GNOME Wayland). Write results into the spec's "Spike results" section.
+Những thứ test tự động không với tới được. Chạy trên Mac có quyền Screen Recording (không phải máy công ty) và Ubuntu (GNOME, Wayland), bằng `npm run tauri dev`. Log ở terminal có dòng `captured N monitor(s) in …` và mọi lỗi dạng `error: …`.
 
-Run with `npm run tauri dev` (stderr shows `captured N monitor(s) in …`).
+Đã kiểm trên máy công ty (chỉ qua log, vì không chụp được): `--capture`, chạy lần hai chuyển sang instance đang chạy, ⌘⇧2, autostart, config hỏng. Cửa sổ đổi phím đã thử trong trình duyệt với backend giả.
 
-## Linux first-time build
+## Ubuntu: build lần đầu
 
-`sudo apt install libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev libssl-dev build-essential curl libpipewire-0.3-dev libclang-dev libxcb1-dev libxrandr-dev libdbus-1-dev`, Rust via rustup, Node 22+. Linux-only code has never been compiled yet — fix compile errors first.
+Code riêng cho Linux **chưa từng được compile**. Cài gói theo [technical.md](technical.md#chạy-dev), chạy, sửa lỗi build trước đã.
 
-## Task 2 — capture + overlay
+## Chụp & overlay
 
-- [ ] Tray icon visible (Mac menu bar / GNOME top bar); no Dock icon on Mac.
-- [ ] Mac without permission: Capture → macOS permission prompt + Snapit error dialog explaining how to enable it.
-- [ ] Capture → frozen screen appears, pixel-sharp on Retina/HiDPI, no black flash.
-- [ ] Mac: overlay covers the menu bar and the Dock.
-- [ ] Mac: overlay appears on top of a fullscreen app (risk 4).
-- [ ] Esc closes; Capture again works.
-- [ ] Capture while overlay open is ignored (no second overlay).
-- [ ] Hotkey → overlay visible feels < 300 ms on Mac (note `captured … in` value).
-- [ ] Multi-monitor: one overlay per monitor, each showing its own screen.
-- [ ] **Ubuntu Wayland:** does a portal permission dialog appear? Every capture or only once? With 2 monitors, once per monitor? (risk 2)
-- [ ] **Ubuntu Wayland:** which monitor does each overlay land on? (risk 1)
+- [ ] Icon tray hiện (menu bar Mac / thanh trên GNOME); Mac không có icon Dock.
+- [ ] Mac chưa cấp quyền: bấm chụp → macOS hỏi quyền + Snapit hiện hộp thoại hướng dẫn.
+- [ ] Chụp → màn hình đứng hình, nét căng trên Retina/HiDPI, không chớp đen.
+- [ ] Từ lúc bấm phím tới lúc thấy overlay: cảm giác dưới 0,3 giây trên Mac.
+- [ ] Mac: overlay đè cả menu bar, Dock, và app đang fullscreen.
+- [ ] Esc đóng; chụp lại được ngay. Bấm chụp lúc overlay đang mở → không có gì xảy ra.
+- [ ] Tray → Capture: menu tray đang tắt dần không lọt vào ảnh.
+- [ ] Nhiều màn hình: mỗi màn hình một overlay, đúng ảnh của nó. Kéo ngay trên màn hình chưa focus → chọn vùng luôn, không cần click trước.
+- [ ] Alt+F4 overlay (Linux) → phím chụp vẫn dùng lại được.
+- [ ] Mac: bấm ⌘H / ⌘Q lúc overlay đang mở → ghi lại chuyện gì xảy ra.
+- [ ] **Wayland:** có hộp thoại xin quyền không? Mỗi lần chụp hay chỉ lần đầu? 2 màn hình thì hỏi 2 lần?
+- [ ] **Wayland:** overlay có nằm đúng màn hình không? Có lệch so với con trỏ khi vẽ không?
 
-## Task 5 — copy / save
+## Copy & lưu
 
-- [ ] ⌘C / Ctrl+C → overlay closes; paste into Preview (File → New from Clipboard) / GIMP / LibreOffice shows the crop with annotations.
-- [ ] Retina: pasted image is 2× the selection's on-screen size (label shows the same numbers).
-- [ ] ⌘S / Ctrl+S → overlay closes, save dialog opens in ~/Pictures with `Snapit_YYYY-MM-DD_HH-MM-SS.png`; saved file opens correctly. Cancel → nothing saved, no error.
-- [ ] Toolbar copy/save buttons do the same.
-- [ ] Text box still open when pressing copy → typed text is included.
-- [ ] **Ubuntu Wayland (risk 3):** after copy and overlay closed, paste still works in another app. If not → spec fallback (copy also saves to ~/Pictures + notification).
+- [ ] ⌘C / Ctrl+C → overlay đóng; dán vào Preview (File → New from Clipboard) / GIMP / LibreOffice thấy đúng vùng cắt kèm hình vẽ.
+- [ ] Ảnh dán ra đúng số pixel ghi trên nhãn kích thước (Retina là 2×).
+- [ ] Đang gõ chữ dở mà bấm copy → chữ vẫn có trong ảnh.
+- [ ] ⌘S / Ctrl+S → hộp thoại mở ở `~/Pictures`, tên `Snapit_….png`; file mở được.
+- [ ] Cancel ở hộp thoại lưu → quay lại overlay, hình vẽ còn nguyên. Bấm phím chụp lúc hộp thoại đang mở → không có gì.
+- [ ] Gõ tên `foo` không đuôi → lưu thành `foo.png`.
+- [ ] Nút copy/lưu trên toolbar chạy giống phím tắt.
+- [ ] Ubuntu scale 1.25× / 1.5× → ảnh không mờ, kích thước khớp nhãn.
+- [ ] **Wayland:** copy xong, overlay đóng rồi vẫn dán được sang app khác. Không được thì báo lại để làm phương án dự phòng (copy kiêm lưu file).
 
-## Task 6 — hotkey / --capture
+## Phím tắt
 
-Verified on the company Mac (log only): `--capture` at launch, second `snapit --capture` forwarding to the running instance, ⌘⇧2 triggering capture.
+- [ ] Linux X11: PrintScreen chụp được. Nếu desktop đã giữ phím này → Snapit báo lỗi lúc mở app.
+- [ ] **Wayland:** gán `snapit --capture` vào Print trong Custom Shortcuts (bản dev: đường dẫn `…/src-tauri/target/debug/snapit --capture`) → bấm là chụp.
+- [ ] Tray → Change hotkey… mở cửa sổ ở trên cùng (kể cả khi đang dùng app khác).
+- [ ] Cửa sổ đang mở → bấm phím chụp cũ không chụp.
+- [ ] Save phím mới → dùng được ngay, phím cũ hết tác dụng, mở lại app vẫn giữ.
+- [ ] Cancel / đóng cửa sổ → phím cũ dùng lại được.
+- [ ] Chọn phím app khác đang chiếm → báo lỗi đỏ, đóng cửa sổ thì phím cũ vẫn chạy.
+- [ ] **Wayland:** cửa sổ hiện hướng dẫn GNOME thay cho ô ghi phím.
 
-- [ ] Mac: the permission error appears as a visible dialog (not only in the log).
-- [ ] Linux X11: PrintScreen triggers capture (GNOME/KDE may already own PrintScreen → error dialog naming the config file; change `hotkey` there).
-- [ ] **Ubuntu Wayland:** Settings → Keyboard → View and Customize Shortcuts → Custom Shortcuts → add command `snapit --capture` (full path for dev: `…/src-tauri/target/debug/snapit --capture`) bound to Print (remove GNOME's own Print binding first). Press → capture.
-- [ ] Config file: edit `hotkey` (e.g. `"F12"`), restart → new key works. Location: macOS `~/Library/Application Support/com.snapit.app/config.json`, Linux `~/.config/com.snapit.app/config.json`.
+## Tự khởi động (bản release)
 
-## Task 7 — start at login
+- [ ] Dấu check "Start at login" khớp thực tế; tắt/bật thì login item mất/có.
+- [ ] Đăng xuất / đăng nhập lại → Snapit có sẵn trên tray.
+- [ ] Mở lần đầu từ DMG đang mount, sau đó chép vào Applications rồi mở lại → login item trỏ về `/Applications`.
+- [ ] **Ubuntu:** `~/.config/autostart/Snapit.desktop` có/mất theo nút bật/tắt.
 
-Verified on the company Mac: first launch writes `config.json` (`autostart_initialized: true`) + `~/Library/LaunchAgents/Snapit.plist`; after removing the plist, relaunch does not re-create it.
+## Bản cài
 
-- [ ] Tray "Start at login" check mark matches reality; toggling off/on removes/creates the login item.
-- [ ] Installed `.app`: after logout/login Snapit is running in the tray. (macOS may show a "background item added" notice — expected.)
-- [ ] **Ubuntu:** `~/.config/autostart/Snapit.desktop` appears/disappears with the toggle; Snapit starts after re-login.
-
-## Task 8 — release builds
-
-macOS `.dmg` built on the company Mac: `src-tauri/target/release/bundle/dmg/Snapit_0.1.0_aarch64.dmg` (LSMinimumSystemVersion 13.0).
-
-- [ ] Install the `.dmg` on a personal Mac, follow README install steps exactly; note anything that differs.
-- [ ] **Ubuntu:** `npm run tauri build` → `.deb` + `.AppImage` in `src-tauri/target/release/bundle/`; fix README's apt dependency list if something was missing.
-- [ ] Full pass of every section above on both machines, then fill the spec's "Spike results" + README "Known limitations".
-
-## After code review (fixes to verify on real hardware)
-
-- [ ] Close an overlay with Alt+F4 (Linux) / force-quit its window → hotkey works again.
-- [ ] Multi-monitor Mac: right after the hotkey, drag on the monitor that isn't focused → selection starts on the first drag.
-- [ ] Multi-monitor Ubuntu Wayland: each monitor gets its own overlay with its own image.
-- [ ] Linux: overlay goes fullscreen after appearing → drawing lines up with the cursor; exported crop matches the selection.
-- [ ] Save → Cancel → overlay comes back with selection and drawings intact. Hotkey while the save dialog is open does nothing.
-- [ ] Save as `foo` (no extension) → `foo.png` written.
-- [ ] Copy failure (hard to force; e.g. no clipboard manager on a minimal Linux session) → red message inside the overlay, overlay stays.
-- [ ] Fractional scaling 1.25× / 1.5× (Ubuntu) → exported image is sharp, size label matches the PNG.
-- [ ] Broken `config.json` (e.g. trailing comma) → startup error naming the file; file unchanged; autostart unchanged. (Verified on Mac via log.)
-- [ ] Tray → Capture: the closing tray menu isn't in the screenshot.
-- [ ] macOS: ⌘H / ⌘Q while an overlay is focused — note what happens.
-- [ ] Release build first launched from the mounted DMG, then copied to Applications and relaunched → login item points to /Applications.
-
-## Change hotkey…
-
-Verified in the browser (dev/settings-preview.html, mocked IPC): letter alone rejected, taken key → red error, pick + Save stores the new key, Wayland view shows instructions and fits 400×280.
-
-- [ ] Tray → Change hotkey… opens the window in front (Mac: also when another app is active).
-- [ ] While it's open, pressing the current hotkey does not capture.
-- [ ] Save → new key captures immediately, old one does nothing; survives restart (config.json updated).
-- [ ] Cancel / close the window → old key works again.
-- [ ] A key taken by another app (e.g. one Spotlight uses) → error, old key still works after closing.
-- [ ] **Ubuntu Wayland:** the window shows the GNOME instructions.
+- [ ] Cài `.dmg` trên Mac cá nhân, làm đúng theo README; chỗ nào khác thì sửa README.
+- [ ] **Ubuntu:** `npm run tauri build` ra `.deb` + `.AppImage`; thiếu gói apt nào thì bổ sung vào technical.md.

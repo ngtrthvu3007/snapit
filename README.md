@@ -1,98 +1,85 @@
 # Snapit
 
-A small Lightshot-style screenshot tool for macOS and Linux: press a key, the screen freezes, drag a region, scribble on it, copy or save.
+Tool chụp màn hình kiểu Lightshot cho macOS và Linux. Bấm phím, màn hình đứng hình, kéo chọn vùng, vẽ vời vài nét, rồi copy hoặc lưu. Hết.
 
-## Install
+## Cài đặt
 
-### macOS (13 Ventura or newer)
+### macOS (13 Ventura trở lên)
 
-1. Open `Snapit_<version>_<arch>.dmg` and drag Snapit to Applications.
-2. Snapit isn't signed, so the first launch is blocked. Open **System Settings → Privacy & Security**, scroll down and click **Open Anyway** next to the Snapit message.
-3. Press the hotkey once. macOS asks for **Screen Recording** permission: enable Snapit in **System Settings → Privacy & Security → Screen Recording**, then quit Snapit from the menu bar and start it again.
+1. Mở file `Snapit_….dmg`, kéo Snapit vào **Applications**.
+2. Lần đầu mở, macOS sẽ chặn vì app chưa ký. Vào **System Settings → Privacy & Security**, kéo xuống, bấm **Open Anyway**.
+3. Bấm ⌘⇧2 một lần. macOS hỏi quyền **Screen Recording**: bật Snapit trong **Privacy & Security → Screen Recording**, rồi thoát Snapit (icon trên menu bar → Quit) và mở lại.
 
-After installing a new version, macOS may forget the permission. If captures fail, remove Snapit from the Screen Recording list with **−**, add it again, and restart Snapit.
+> Cài bản mới đè lên bản cũ thì macOS có thể "quên" quyền. Nếu chụp không được: vào lại Screen Recording, xoá Snapit (nút **−**), thêm lại, mở lại app.
 
 ### Ubuntu / Linux
 
 ```sh
-sudo apt install ./Snapit_<version>_amd64.deb
-# or: chmod +x Snapit_<version>_amd64.AppImage && ./Snapit_<version>_amd64.AppImage
+sudo apt install ./Snapit_…_amd64.deb
 ```
 
-**Hotkey on Wayland (Ubuntu's default session).** Wayland doesn't let apps grab keys, so bind one yourself:
+Hoặc dùng bản AppImage, không cần cài:
 
-1. **Settings → Keyboard → View and Customize Shortcuts → Screenshots**: remove the binding for **Print** (or choose another key below).
-2. **Custom Shortcuts → +**: name `Snapit`, command `snapit --capture` (for the AppImage use its full path plus ` --capture`), shortcut **Print**.
+```sh
+chmod +x Snapit_…_amd64.AppImage
+./Snapit_…_amd64.AppImage
+```
 
-GNOME may ask for permission to take screenshots the first time.
+**Ubuntu mặc định chạy Wayland**, mà Wayland không cho app tự giữ phím tắt. Bạn gán tay một lần:
 
-On X11 the built-in hotkey (PrintScreen) works without this.
+1. **Settings → Keyboard → View and Customize Shortcuts → Screenshots**: gỡ phím **Print** khỏi công cụ chụp của GNOME (hoặc chọn phím khác ở bước sau).
+2. **Custom Shortcuts → +**: tên `Snapit`, lệnh `snapit --capture` (AppImage thì ghi đường dẫn đầy đủ tới file, kèm `--capture` phía sau), phím **Print**.
 
-## Use
+Lần đầu chụp GNOME có thể hỏi quyền, cứ cho phép. Nếu máy chạy X11 thì không cần bước này, phím PrintScreen tự chạy.
 
-| Action | macOS | Linux |
+Chưa có file cài? Tự build theo [tài liệu kỹ thuật](docs/technical.md#build-bản-cài).
+
+## Cách dùng
+
+1. Bấm phím chụp: **⌘⇧2** trên Mac, **PrintScreen** trên Linux (hoặc phím bạn đã gán). Bấm **Capture** trên icon tray cũng được.
+2. Màn hình đứng hình và tối lại. Kéo chuột để chọn vùng; kéo cạnh/góc để chỉnh, kéo bên trong để di chuyển.
+3. Chọn công cụ trên thanh công cụ rồi vẽ trong vùng chọn: bút, đường thẳng, mũi tên, khung chữ nhật, bút dạ quang, chữ. Có 8 màu sẵn + ô chọn màu tuỳ ý. Bấm lại công cụ đang chọn để tắt nó (lúc đó kéo bên trong lại là di chuyển vùng).
+4. Copy hoặc lưu.
+
+| Việc | macOS | Linux |
 |---|---|---|
-| Capture | ⌘⇧2 | PrintScreen (X11) / your custom shortcut (Wayland) |
-| Copy to clipboard and close | ⌘C | Ctrl+C |
-| Save as PNG | ⌘S | Ctrl+S |
-| Undo last drawing | ⌘Z | Ctrl+Z |
-| Cancel | Esc | Esc |
+| Copy vào clipboard (rồi đóng) | ⌘C | Ctrl+C |
+| Lưu file PNG | ⌘S | Ctrl+S |
+| Undo nét vừa vẽ | ⌘Z | Ctrl+Z |
+| Huỷ, đóng màn chụp | Esc | Esc |
 
-You can also click **Capture** in the tray / menu bar icon. To pick another capture key, use **Change hotkey…** in the same menu: press the new combination, then Save (it works immediately).
+Mấy điều nên biết:
 
-Drag to select a region, then drag its edges or inside it to adjust. Pick a tool from the toolbar (pen, line, arrow, rectangle, marker, text) and a color, then draw inside the selection. Once something is drawn, clicking outside no longer starts a new selection. Press Esc to start over.
+- **Gõ chữ:** chọn công cụ **T**, click vào chỗ cần gõ. Enter để chốt, Shift+Enter để xuống dòng, Esc để bỏ.
+- Đã vẽ gì rồi thì click ra ngoài **không** xoá vùng chọn, khỏi lo mất công. Muốn chọn lại thì Esc rồi chụp lại.
+- Ảnh lưu ra đúng độ phân giải thật của màn hình (Retina là 2×). Mặc định lưu vào `~/Pictures` với tên `Snapit_năm-tháng-ngày_giờ-phút-giây.png`.
+- Bấm Cancel ở hộp thoại lưu thì quay lại màn chụp, hình vẽ vẫn còn nguyên.
 
-Saved files default to `~/Pictures/Snapit_YYYY-MM-DD_HH-MM-SS.png`. Images are saved at the screen's full resolution, so Retina captures come out at 2×.
+## Đổi phím chụp
 
-Snapit starts at login. Turn this off with **Start at login** in the tray menu.
+Icon tray → **Change hotkey…** → bấm tổ hợp phím mới → **Save**. Có hiệu lực ngay, không cần mở lại app.
 
-## Configuration
+Phím chữ/số phải đi kèm ⌘/Ctrl/Alt/Shift; riêng F1–F24 và PrintScreen dùng một mình được. Phím đã bị app khác chiếm thì Snapit báo và giữ phím cũ.
 
-`config.json`, created on first launch:
+Trên Wayland cửa sổ này chỉ hướng dẫn gán phím trong cài đặt GNOME (như phần cài đặt ở trên).
 
-- macOS: `~/Library/Application Support/com.snapit.app/config.json`
-- Linux: `~/.config/com.snapit.app/config.json`
+## Tự khởi động
 
-```json
-{
-  "hotkey": "CommandOrControl+Shift+2",
-  "autostart_initialized": true
-}
-```
+Snapit tự chạy cùng máy, mặc định bật. Tắt/bật ở icon tray → **Start at login**.
 
-The tray's **Change hotkey…** writes `hotkey` for you. By hand, it uses names like `F12`, `PrintScreen`, `CommandOrControl+Shift+S`. Restart Snapit after editing. If the key is already taken, Snapit shows an error at startup. If the file has a typo, Snapit says so at startup, uses defaults for that run and leaves your file alone.
+## Gặp lỗi?
 
-## Known limitations
+- **Bấm phím không có gì xảy ra:** xem icon Snapit có trên menu bar/tray không. Không có thì mở lại app. Trên Wayland thì kiểm tra lại phím đã gán ở Custom Shortcuts.
+- **Báo thiếu quyền Screen Recording:** làm lại bước 3 phần cài đặt macOS.
+- **Báo phím chụp bị chiếm lúc mở app:** đổi phím khác qua **Change hotkey…**.
+- **Báo "Ignoring broken settings":** file cấu hình bị sửa sai cú pháp. Snapit vẫn chạy với cài đặt mặc định và không đụng vào file của bạn. Sửa lại file, hoặc xoá đi cho Snapit tạo mới:
+  - macOS: `~/Library/Application Support/com.snapit.app/config.json`
+  - Linux: `~/.config/com.snapit.app/config.json`
 
-- Unsigned builds: macOS shows the "Open Anyway" step, and the permission may need to be granted again after updates.
-- Linux on Wayland: no built-in hotkey (see above). With several monitors, the overlay placement and the number of permission prompts depend on GNOME. See `docs/TESTING.md`.
-- macOS capture uses the older CoreGraphics API (via the `xcap` library). On macOS 15+ the system may periodically ask you to re-confirm Screen Recording for Snapit.
-- No upload, history, blur or Windows support (yet).
+## Chưa có
 
-## Build from source
+Upload lấy link, lịch sử ảnh, làm mờ, Windows. Cần thì tính sau.
 
-Requires Rust (stable) and Node 22+.
+---
 
-```sh
-npm install --min-release-age=7
-npm run tauri dev      # run (dev builds never register a login item)
-npm test               # TS unit tests
-(cd src-tauri && cargo test)
-npm run tauri build    # macOS: .app + .dmg, Linux: .deb + .AppImage
-```
-
-Linux build dependencies (Ubuntu):
-
-```sh
-sudo apt install build-essential curl libwebkit2gtk-4.1-dev libayatana-appindicator3-dev \
-  librsvg2-dev libxdo-dev libssl-dev libpipewire-0.3-dev libclang-dev libxcb1-dev \
-  libxrandr-dev libdbus-1-dev libgbm-dev
-```
-
-While `npm run dev` runs, two pages work in a normal browser without Tauri or screen-capture permission:
-`http://localhost:1420/dev/preview.html` (overlay editor on a fake 2× screenshot) and
-`http://localhost:1420/dev/settings-preview.html` (hotkey window, mocked backend; add `?wayland` for the Wayland view).
-
-Tests live in `tests/` (TypeScript, Vitest) and `src-tauri/src/tests/` (Rust).
-
-Manual test checklist: [docs/TESTING.md](docs/TESTING.md).
+Sửa code? Đọc [tài liệu kỹ thuật](docs/technical.md).
