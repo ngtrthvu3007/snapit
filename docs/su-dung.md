@@ -1,4 +1,10 @@
+<script setup>
+import { withBase } from "vitepress";
+</script>
+
 # Cách dùng
+
+<video :src="withBase('/images/demo-vi.webm')" :poster="withBase('/images/draw-vi.png')" autoplay muted loop playsinline style="width:100%;border-radius:8px"></video>
 
 ## Chụp
 
@@ -9,7 +15,7 @@
 
 3. Chọn công cụ trên thanh công cụ rồi vẽ trong vùng chọn.
 
-![Vùng chọn đã có khung đỏ, mũi tên, bút dạ quang và một dòng chữ](/images/draw-vi.png)
+![Vùng chọn trên trang kế hoạch chuyến đi: khung đỏ quanh ngọn hải đăng, mũi tên, ghi chú, giờ 06:30 tô vàng](/images/draw-vi.png)
 
 4. <kbd>⌘</kbd> <kbd>C</kbd> để copy (rồi dán đi đâu cũng được), hoặc <kbd>⌘</kbd> <kbd>S</kbd> để lưu file.
 
@@ -52,3 +58,5 @@ Icon menu bar → **Change hotkey…** → bấm tổ hợp phím mới → **Sa
 ## Tự khởi động
 
 Snapit tự chạy cùng máy, mặc định bật. Tắt hoặc bật lại ở icon menu bar → **Start at login**.
+
+<small>Ảnh hải đăng trong ví dụ: Nick Diamantidis, Unsplash.</small>

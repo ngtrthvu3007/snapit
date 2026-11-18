@@ -1,4 +1,10 @@
+<script setup>
+import { withBase } from "vitepress";
+</script>
+
 # How to use
+
+<video :src="withBase('/images/demo-en.webm')" :poster="withBase('/images/draw-en.png')" autoplay muted loop playsinline style="width:100%;border-radius:8px"></video>
 
 ## Taking a screenshot
 
@@ -9,7 +15,7 @@
 
 3. Pick a tool from the toolbar and draw inside the selection.
 
-![The selection now has a red box, an arrow, a highlighter stroke and a line of text](/images/draw-en.png)
+![The selection on a trip plan: a red box around the lighthouse, an arrow, a note, the 06:30 start highlighted](/images/draw-en.png)
 
 4. <kbd>⌘</kbd> <kbd>C</kbd> to copy (then paste it anywhere), or <kbd>⌘</kbd> <kbd>S</kbd> to save a file.
 
@@ -52,3 +58,5 @@ Menu bar icon → **Change hotkey…** → press the new combination → **Save*
 ## Start at login
 
 Snapit starts with your computer, on by default. Toggle it from the menu bar icon → **Start at login**.
+
+<small>Lighthouse photo in the examples: Nick Diamantidis, Unsplash.</small>

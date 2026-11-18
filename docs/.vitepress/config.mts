@@ -121,6 +121,7 @@ export default defineConfig({
   title: "Snapit",
   base: DOCS_BASE,
   srcExclude: ["superpowers/**"],
+  appearance: "force-dark", // luôn nền tối, không có nút đổi sáng/tối
 
   locales: {
     root: {

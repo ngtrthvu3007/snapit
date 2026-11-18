@@ -16,17 +16,19 @@
     />
     <style>
       /* Một cột giữa trang, nói khẽ: tiêu đề và phần minh hoạ là thứ lớn duy nhất.
-         Mực xanh chai trên giấy trắng ngà; vàng chỉ ở nút và đúng một phần nền vàng. */
+         Luôn nền tối: xanh chai rất đậm, chữ trắng ngà; màu cát chỉ ở nút và đúng một phần nền cát. */
       :root {
-        --bg: #f7f7f5;
-        --surface: #ebebe8;
-        --ink: #0d2a1c;
-        --muted: #55625b;
-        --accent: #f6e016;
-        --accent-ink: #0d2a1c;
-        --field: #f6e016;
-        --field-ink: #0d2a1c;
-        --field-surface: #fbf3a6;
+        color-scheme: dark;
+        --bg: #111111;
+        --surface: #1b1b1b;
+        --surface-strong: #262626;
+        --ink: #ededed;
+        --muted: #a3a3a3;
+        --accent: #e6d9b3;
+        --accent-ink: #111111;
+        --field: #e6d9b3;
+        --field-ink: #111111;
+        --field-surface: #f1e9cf;
 
         --font:
           "Familjen Grotesk", "Be Vietnam Pro", system-ui, -apple-system, sans-serif;
@@ -187,53 +189,14 @@
         position: relative;
         width: var(--wide);
         margin: 72px auto 0;
-        aspect-ratio: 808 / 490;
+        aspect-ratio: 960 / 576;
       }
-      .states img {
-        position: absolute;
-        inset: 0;
+      .states video {
+        display: block;
         width: 100%;
         height: 100%;
-      }
-      .states img + img {
-        opacity: 0; /* không có chuyển động: chỉ ảnh đầu (đã vẽ) hiện */
-      }
-      @media (prefers-reduced-motion: no-preference) {
-        .states img {
-          animation: crossfade 18s infinite;
-        }
-        /* ảnh đầu đã hiện sẵn lúc tải trang (bắt đầu giữa nhịp), hai ảnh sau nối tiếp */
-        .states img:nth-child(1) {
-          animation-delay: -1.6s;
-        }
-        .states img:nth-child(2) {
-          animation-delay: 4.4s;
-        }
-        .states img:nth-child(3) {
-          animation-delay: 10.4s;
-        }
-        .states.is-paused img {
-          animation-play-state: paused;
-        }
-      }
-
-      /* hiện 6 giây, chuyển 1,6 giây */
-      @keyframes crossfade {
-        0% {
-          opacity: 0;
-        }
-        9% {
-          opacity: 1;
-        }
-        33% {
-          opacity: 1;
-        }
-        42% {
-          opacity: 0;
-        }
-        100% {
-          opacity: 0;
-        }
+        border-radius: var(--radius);
+        background: var(--surface);
       }
       .states-caption {
         width: var(--wide);
@@ -336,6 +299,7 @@
         border-radius: 12px;
         overflow: hidden;
         background: var(--bg);
+        color: var(--ink); /* khung tối nằm trên nền vàng: chữ sáng lại */
       }
       .panel-picture {
         position: relative;
@@ -384,7 +348,7 @@
         height: 24px;
         margin: 0;
         border-radius: 12px;
-        background: #c9ccc7;
+        background: #4a4a4a;
         position: relative;
         cursor: pointer;
         transition: background-color 160ms;
@@ -401,7 +365,10 @@
         transition: transform 160ms var(--ease);
       }
       .switch:checked {
-        background: var(--ink);
+        background: var(--accent);
+      }
+      .switch:checked::after {
+        background: var(--accent-ink);
       }
       .switch:checked::after {
         transform: translateX(16px);
@@ -577,32 +544,23 @@
       </div>
 
       <figure>
-        <div class="states" id="states">
-          <img
-            src="./images/draw-vi.png"
-            data-src-en="./images/draw-en.png"
-            width="1616"
-            height="980"
-            alt="Snapit trên một trang tài liệu: vùng chọn nét đứt, khung đỏ quanh tên file, mũi tên và ghi chú, thanh công cụ ngay dưới"
-            data-i18n-alt="states.alt"
-          />
-          <img
-            src="./images/frozen-vi.png"
-            data-src-en="./images/frozen-en.png"
-            width="1616"
-            height="980"
-            alt=""
-          />
-          <img
-            src="./images/select-vi.png"
-            data-src-en="./images/select-en.png"
-            width="1616"
-            height="980"
-            alt=""
-          />
+        <div class="states">
+          <video
+            id="demo"
+            src="./images/demo-vi.webm"
+            data-src-en="./images/demo-en.webm"
+            poster="./images/draw-vi.png"
+            data-poster-en="./images/draw-en.png"
+            muted
+            loop
+            playsinline
+            preload="metadata"
+            aria-label="Video: Snapit làm màn hình đứng lại, kéo chọn vùng, khoanh ngọn hải đăng, tô giờ xuất phát và gõ ghi chú"
+            data-i18n-aria="states.video"
+          ></video>
         </div>
         <figcaption class="states-caption" data-i18n="states.caption">
-          Một lần chụp từ đầu đến cuối: màn hình đứng lại, kéo chọn, vẽ.
+          Một lần chụp từ đầu đến cuối, quay thẳng từ Snapit.
         </figcaption>
       </figure>
 
@@ -622,8 +580,8 @@
               <img
                 src="./images/frozen-vi.png"
                 data-src-en="./images/frozen-en.png"
-                width="1616"
-                height="980"
+                width="1704"
+                height="1118"
                 loading="lazy"
                 alt="Cả màn hình đứng lại và tối đi"
                 data-i18n-alt="how.one.alt"
@@ -650,10 +608,10 @@
               <img
                 src="./images/draw-vi.png"
                 data-src-en="./images/draw-en.png"
-                width="1616"
-                height="980"
+                width="1704"
+                height="1118"
                 loading="lazy"
-                alt="Vùng chọn có khung đỏ, mũi tên, bút dạ quang và ghi chú"
+                alt="Vùng chọn trên trang kế hoạch chuyến đi: khung đỏ quanh ngọn hải đăng, mũi tên, ghi chú, giờ 06:30 được tô vàng"
                 data-i18n-alt="how.two.alt"
               />
               <figcaption data-i18n="how.two.caption">
@@ -675,14 +633,14 @@
               <img
                 src="./images/result-vi.png"
                 data-src-en="./images/result-en.png"
-                width="1456"
-                height="724"
+                width="1584"
+                height="886"
                 loading="lazy"
                 alt="Ảnh Snapit xuất ra: đúng vùng đã chọn, kèm các nét vẽ"
                 data-i18n-alt="how.three.alt"
               />
               <figcaption data-i18n="how.three.caption">
-                Đây là ảnh thật Snapit xuất ra: 1456 × 724 pixel, nét đúng như màn hình
+                Đây là ảnh thật Snapit xuất ra: 1584 × 886 pixel, nét đúng như màn hình
                 Retina.
               </figcaption>
             </figure>
@@ -704,18 +662,18 @@
             <img
               src="./images/select-vi.png"
               data-src-en="./images/select-en.png"
-              width="1616"
-              height="980"
+              width="1704"
+              height="1118"
               loading="lazy"
-              alt="Vùng chọn trên trang tài liệu, chưa vẽ gì"
+              alt="Vùng chọn trên trang kế hoạch chuyến đi, chưa vẽ gì"
               data-i18n-alt="try.alt"
             />
             <img
               src="./images/layer-rect-vi.png"
               data-src-en="./images/layer-rect-en.png"
               data-layer="rect"
-              width="1616"
-              height="980"
+              width="1704"
+              height="1118"
               loading="lazy"
               alt=""
             />
@@ -723,8 +681,8 @@
               src="./images/layer-arrow-vi.png"
               data-src-en="./images/layer-arrow-en.png"
               data-layer="arrow"
-              width="1616"
-              height="980"
+              width="1704"
+              height="1118"
               loading="lazy"
               alt=""
             />
@@ -732,8 +690,8 @@
               src="./images/layer-marker-vi.png"
               data-src-en="./images/layer-marker-en.png"
               data-layer="marker"
-              width="1616"
-              height="980"
+              width="1704"
+              height="1118"
               loading="lazy"
               alt=""
             />
@@ -741,8 +699,8 @@
               src="./images/layer-note-vi.png"
               data-src-en="./images/layer-note-en.png"
               data-layer="note"
-              width="1616"
-              height="980"
+              width="1704"
+              height="1118"
               loading="lazy"
               alt=""
             />
@@ -786,7 +744,7 @@
                 checked
             /></label>
             <div class="control">
-              <span data-i18n="try.size">Ảnh ra</span><output>1456 × 724 px</output>
+              <span data-i18n="try.size">Ảnh ra</span><output>1584 × 886 px</output>
             </div>
             <div class="control">
               <span data-i18n="try.file">Tên file nếu lưu bây giờ</span
@@ -840,7 +798,9 @@
         >
         <a href="__REPO_URL__">GitHub</a>
       </nav>
-      <span class="year">2026</span>
+      <span class="year" data-i18n="footer.credit"
+        >Ảnh hải đăng: Nick Diamantidis, Unsplash · 2026</span
+      >
     </footer>
 
     <script>
@@ -856,8 +816,7 @@
         "hero.note": "Free. macOS 13 or newer, Ubuntu and other Linux.",
         "states.alt":
           "Snapit over a docs page: dashed selection, a red box around a file name, an arrow and a note, toolbar right underneath",
-        "states.caption":
-          "One capture start to finish: the screen holds still, you drag, you draw.",
+        "states.caption": "One capture start to finish, recorded straight from Snapit.",
         "how.title": "How it goes",
         "how.one": "First, press ⌘⇧2.",
         "how.one.note": "On Linux it's PrintScreen.",
@@ -876,11 +835,11 @@
         "how.three.alt":
           "The image Snapit exported: exactly the selected area, drawings included",
         "how.three.caption":
-          "This is a real Snapit export: 1456 × 724 pixels, as sharp as the Retina screen it came from.",
+          "This is a real Snapit export: 1584 × 886 pixels, as sharp as the Retina screen it came from.",
         "try.title": "Flip it on and off",
         "try.text":
           "Every stroke here was drawn by Snapit's own drawing code. Switch a few off and see how much cleaner it gets.",
-        "try.alt": "The selection on the docs page, nothing drawn yet",
+        "try.alt": "The selection on the trip plan, nothing drawn yet",
         "try.rect": "Red box",
         "try.arrow": "Arrow",
         "try.marker": "Highlighter",
@@ -894,6 +853,7 @@
         "closing.link": "Step-by-step install →",
         "footer.what": "Snapit, screenshots for Mac and Linux",
         "footer.help": "Troubleshooting",
+        "footer.credit": "Lighthouse photo: Nick Diamantidis, Unsplash · 2026",
       };
       const STORAGE_KEY = "snapit-lang";
 
@@ -917,12 +877,29 @@
           element.dataset.srcVi ??= element.getAttribute("src");
           element.src = english ? element.dataset.srcEn : element.dataset.srcVi;
         }
+        for (const element of document.querySelectorAll("[data-i18n-aria]")) {
+          element.dataset.ariaVi ??= element.getAttribute("aria-label");
+          element.setAttribute(
+            "aria-label",
+            english ? EN[element.dataset.i18nAria] : element.dataset.ariaVi,
+          );
+        }
+        for (const element of document.querySelectorAll("[data-poster-en]")) {
+          element.dataset.posterVi ??= element.getAttribute("poster");
+          element.poster = english ? element.dataset.posterEn : element.dataset.posterVi;
+        }
         for (const element of document.querySelectorAll("[data-href-en]")) {
           element.dataset.hrefVi ??= element.getAttribute("href");
           element.href = english ? element.dataset.hrefEn : element.dataset.hrefVi;
         }
         for (const button of document.querySelectorAll("[data-lang]")) {
           button.setAttribute("aria-pressed", String(button.dataset.lang === language));
+        }
+
+        // video vừa đổi nguồn thì phát lại (trừ khi người xem tắt chuyển động)
+        const video = document.getElementById("demo");
+        if (video && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          video.play().catch(() => {});
         }
 
         try {
@@ -971,11 +948,23 @@
       tick();
       setInterval(tick, 1000);
 
-      // ── Ô minh hoạ đứng yên khi tab bị ẩn ──
-      const states = document.getElementById("states");
-      document.addEventListener("visibilitychange", () =>
-        states.classList.toggle("is-paused", document.hidden),
+      // ── Video demo: bỏ qua giây đầu (lúc trang còn đang tải), dừng khi tab ẩn ──
+      const LOOP_START_SECONDS = 1;
+      const demo = document.getElementById("demo");
+      const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      demo.addEventListener(
+        "loadedmetadata",
+        () => (demo.currentTime = LOOP_START_SECONDS),
       );
+      demo.addEventListener("timeupdate", () => {
+        if (demo.currentTime < LOOP_START_SECONDS) demo.currentTime = LOOP_START_SECONDS;
+      });
+      if (!reduceMotion) {
+        demo.play().catch(() => {});
+        document.addEventListener("visibilitychange", () =>
+          document.hidden ? demo.pause() : demo.play().catch(() => {}),
+        );
+      }
 
       // ── Hiện dần khi cuộn tới ──
       if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
