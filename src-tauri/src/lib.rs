@@ -10,7 +10,7 @@ mod overlay;
 mod tray;
 
 use capture::{CaptureGuard, Shots};
-use tauri::{Manager, RunEvent};
+use tauri::{Manager, RunEvent, WindowEvent};
 use tauri_plugin_autostart::MacosLauncher;
 
 /// `snapit --capture` starts a capture (in the already-running instance, if any).
@@ -35,14 +35,28 @@ pub fn run() {
         .manage(Shots::default())
         .manage(CaptureGuard::default())
         .register_uri_scheme_protocol(overlay::SHOT_SCHEME, |ctx, req| overlay::serve_shot(ctx.app_handle(), &req))
+        .on_window_event(|window, event| {
+            if let WindowEvent::Destroyed = event {
+                overlay::on_window_destroyed(window.app_handle(), window.label());
+            }
+        })
         .invoke_handler(tauri::generate_handler![overlay::close_overlays, output::copy_png, output::save_png])
         .setup(|app| {
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory); // tray only, no Dock icon
 
             let cfg_dir = app.path().app_config_dir()?;
-            let cfg = config::load(&cfg_dir);
-            autostart::init_once(app.handle(), &cfg_dir, cfg.clone());
+            let cfg = match config::load(&cfg_dir) {
+                Ok(cfg) => {
+                    autostart::init(app.handle(), &cfg_dir, cfg.clone());
+                    cfg
+                }
+                // keep the user's file (and their autostart choice) untouched until they fix it
+                Err(e) => {
+                    dialog::show_error(app.handle(), &format!("Ignoring broken settings, using defaults.\n{e}"));
+                    config::Config::default()
+                }
+            };
             tray::build(app.handle())?;
             hotkey::register(app.handle(), &cfg.hotkey, &cfg_dir)?;
 

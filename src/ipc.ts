@@ -6,7 +6,7 @@ const COMMAND = { closeOverlays: "close_overlays", copyPng: "copy_png", savePng:
 /** URL of a monitor's frozen screenshot, served by Rust's `shot://` scheme. */
 export const shotUrl = (monitor: string) => `shot://localhost/${monitor}`;
 
-/** Overlay windows are labelled `overlay-<monitor index>`. */
+/** Overlay windows are labelled `overlay-<capture>-<monitor index>`. */
 export const monitorFromLabel = (label: string) => label.slice(label.lastIndexOf("-") + 1);
 
 export const closeOverlays = () => invoke<void>(COMMAND.closeOverlays);

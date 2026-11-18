@@ -64,3 +64,6 @@ export const TOOLS: { tool: Tool; icon: string; name: string }[] = [
 
 /** Keyboard shortcuts (matched on KeyboardEvent.code, so they work on any layout), used with ⌘ / Ctrl. */
 export const SHORTCUT_CODES = { copy: "KeyC", save: "KeyS", undo: "KeyZ" } as const;
+
+/** How long an in-overlay error message stays visible. */
+export const NOTICE_DURATION_MS = 4000;

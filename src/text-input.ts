@@ -13,6 +13,8 @@ export class TextInput {
   ) {
     const el = this.el;
     el.className = "text-input";
+    el.wrap = "off"; // only Shift+Enter breaks lines, exactly like the committed text
+    el.rows = 1;
     Object.assign(el.style, {
       left: `${at.x}px`,
       top: `${at.y}px`,
@@ -29,7 +31,7 @@ export class TextInput {
         onCommit();
       }
     });
-    el.addEventListener("input", () => this.fitHeight());
+    el.addEventListener("input", () => this.fitSize());
     document.body.append(el);
     // focus after the pointer event finishes, or the canvas click takes focus back
     requestAnimationFrame(() => el.focus());
@@ -43,8 +45,10 @@ export class TextInput {
     this.el.remove();
   }
 
-  private fitHeight() {
-    this.el.style.height = "auto";
+  /** Grows the box with its content (no wrapping, no scrollbars). */
+  private fitSize() {
+    for (const dim of ["height", "width"] as const) this.el.style[dim] = "auto";
     this.el.style.height = `${this.el.scrollHeight}px`;
+    this.el.style.width = `${this.el.scrollWidth}px`;
   }
 }

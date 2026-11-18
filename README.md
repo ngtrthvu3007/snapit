@@ -60,12 +60,13 @@ Snapit starts at login. Turn this off with **Start at login** in the tray menu.
 }
 ```
 
-`hotkey` uses names like `F12`, `PrintScreen`, `CommandOrControl+Shift+S`. Restart Snapit after editing. If the key is already taken, Snapit shows an error at startup.
+`hotkey` uses names like `F12`, `PrintScreen`, `CommandOrControl+Shift+S`. Restart Snapit after editing. If the key is already taken, Snapit shows an error at startup. If the file has a typo, Snapit says so at startup, uses defaults for that run and leaves your file alone.
 
 ## Known limitations
 
 - Unsigned builds: macOS shows the "Open Anyway" step, and the permission may need to be granted again after updates.
 - Linux on Wayland: no built-in hotkey (see above). With several monitors, the overlay placement and the number of permission prompts depend on GNOME. See `docs/TESTING.md`.
+- macOS capture uses the older CoreGraphics API (via the `xcap` library). On macOS 15+ the system may periodically ask you to re-confirm Screen Recording for Snapit.
 - No upload, history, blur or Windows support (yet).
 
 ## Build from source
@@ -74,7 +75,7 @@ Requires Rust (stable) and Node 22+.
 
 ```sh
 npm install --min-release-age=7
-npm run tauri dev      # run
+npm run tauri dev      # run (dev builds never register a login item)
 npm test               # TS unit tests
 (cd src-tauri && cargo test)
 npm run tauri build    # macOS: .app + .dmg, Linux: .deb + .AppImage

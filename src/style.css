@@ -9,6 +9,8 @@
   --button-size: 28px;
   --swatch-size: 18px;
   --text-input-border: #fff;
+  --notice-bg: #b3261e;
+  --notice-fg: #fff;
 }
 
 html, body { margin: 0; height: 100%; overflow: hidden; background: #000; user-select: none; font: 13px system-ui, sans-serif; }
@@ -37,5 +39,11 @@ canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; cursor: crossha
 /* font, size, color and line-height are set from text-input.ts so canvas text matches exactly */
 .text-input {
   position: fixed; margin: 0; padding: 0; min-width: 40px; border: 1px dashed var(--text-input-border);
-  outline: none; background: transparent; resize: none; overflow: hidden;
+  outline: none; background: transparent; resize: none; overflow: hidden; white-space: pre;
 }
+
+#notice {
+  position: fixed; top: 16px; left: 50%; transform: translateX(-50%); max-width: 80vw; padding: 8px 14px;
+  border-radius: 6px; background: var(--notice-bg); color: var(--notice-fg); box-shadow: var(--toolbar-shadow);
+}
+#notice[hidden] { display: none; }

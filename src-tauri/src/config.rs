@@ -34,11 +34,15 @@ pub fn file_path(dir: &Path) -> PathBuf {
     dir.join(FILE_NAME)
 }
 
-pub fn load(dir: &Path) -> Config {
-    std::fs::read_to_string(file_path(dir))
-        .ok()
-        .and_then(|s| serde_json::from_str(&s).ok())
-        .unwrap_or_default()
+/// Missing file → defaults (first launch). Unreadable or invalid → error naming the file,
+/// so a typo in a hand edit isn't mistaken for a first launch.
+pub fn load(dir: &Path) -> Result<Config, String> {
+    let path = file_path(dir);
+    match std::fs::read_to_string(&path) {
+        Ok(text) => serde_json::from_str(&text).map_err(|e| format!("{}: {e}", path.display())),
+        Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(Config::default()),
+        Err(e) => Err(format!("{}: {e}", path.display())),
+    }
 }
 
 pub fn save(dir: &Path, c: &Config) -> io::Result<()> {
@@ -64,17 +68,18 @@ mod tests {
     #[test]
     fn missing_config_gives_default() {
         let d = tmp("missing");
-        let c = load(&d);
+        let c = load(&d).unwrap();
         assert_eq!(c.hotkey, default_hotkey());
         assert!(!c.autostart_initialized);
     }
 
     #[test]
-    fn invalid_config_gives_default() {
+    fn invalid_config_is_an_error() {
         let d = tmp("invalid");
         std::fs::create_dir_all(&d).unwrap();
         std::fs::write(file_path(&d), "{oops").unwrap();
-        assert_eq!(load(&d).hotkey, default_hotkey());
+        // a typo must not be mistaken for "first launch" (that would overwrite the file and re-enable autostart)
+        assert!(load(&d).is_err());
     }
 
     #[test]
@@ -82,7 +87,7 @@ mod tests {
         let d = tmp("partial");
         std::fs::create_dir_all(&d).unwrap();
         std::fs::write(file_path(&d), r#"{"hotkey":"F1"}"#).unwrap();
-        let c = load(&d);
+        let c = load(&d).unwrap();
         assert_eq!(c.hotkey, "F1");
         assert!(!c.autostart_initialized);
     }
@@ -91,7 +96,7 @@ mod tests {
     fn roundtrip_creates_dir() {
         let d = tmp("roundtrip");
         save(&d, &Config { hotkey: "F1".into(), autostart_initialized: true }).unwrap();
-        let c = load(&d);
+        let c = load(&d).unwrap();
         assert_eq!(c.hotkey, "F1");
         assert!(c.autostart_initialized);
     }

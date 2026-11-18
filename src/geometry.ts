@@ -2,6 +2,8 @@ import { EDGE_GRAB_TOLERANCE, MIN_SELECTION_SIZE } from "./constants";
 
 export type Point = { x: number; y: number };
 export type Rect = { x: number; y: number; w: number; h: number };
+/** Physical image pixels per CSS pixel, per axis (they can differ if the window isn't exactly the monitor's shape). */
+export type Scale = { x: number; y: number };
 export type Edge = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw";
 /** What a pointer press on a selection grabs: one of its edges/corners, or the whole thing. */
 export type Handle = Edge | "move";
@@ -12,6 +14,11 @@ export function normalizeRect(x1: number, y1: number, x2: number, y2: number): R
 
 export function isValidSelection(r: Rect): boolean {
   return r.w >= MIN_SELECTION_SIZE && r.h >= MIN_SELECTION_SIZE;
+}
+
+/** The selection after a drag ends: a too-small result falls back (to nothing, or to the pre-resize rect). */
+export function settleSelection(r: Rect, fallback: Rect | null): Rect | null {
+  return isValidSelection(r) ? r : fallback;
 }
 
 export function clamp(v: number, lo: number, hi: number): number {

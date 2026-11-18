@@ -61,20 +61,30 @@ pub fn trigger(app: &AppHandle) {
         eprintln!("captured {} monitor(s) in {:?}", shots.len(), started.elapsed());
         *app.state::<Shots>().0.lock().unwrap() = shots;
         let handle = app.clone();
-        let _ = app.run_on_main_thread(move || {
+        let opened = app.run_on_main_thread(move || {
             if let Err(e) = overlay::open_overlays(&handle) {
                 overlay::close_overlays(handle.clone());
                 show_error(&handle, &e.to_string());
             }
         });
+        if let Err(e) = opened {
+            overlay::release_capture(&app);
+            show_error(&app, &e.to_string());
+        }
     });
+}
+
+const NO_MONITORS_MESSAGE: &str = "No screen found to capture.";
+
+fn require_monitors(shots: Vec<Shot>) -> Result<Vec<Shot>, String> {
+    if shots.is_empty() { Err(NO_MONITORS_MESSAGE.into()) } else { Ok(shots) }
 }
 
 fn capture_all() -> Result<Vec<Shot>, String> {
     ensure_permission()?;
     let err = |e: xcap::XCapError| e.to_string();
     // ponytail: on Wayland xcap calls the portal once per monitor; capture once + crop if that shows N dialogs
-    xcap::Monitor::all()
+    let shots = xcap::Monitor::all()
         .map_err(err)?
         .iter()
         .map(|m| {
@@ -87,7 +97,8 @@ fn capture_all() -> Result<Vec<Shot>, String> {
                 png: encode_png_fast(&img)?,
             })
         })
-        .collect()
+        .collect::<Result<Vec<_>, String>>()?;
+    require_monitors(shots)
 }
 
 /// Speed over size: the PNG only travels to our own webview.
@@ -128,5 +139,13 @@ mod tests {
         assert!(!g.try_begin());
         g.end();
         assert!(g.try_begin());
+    }
+
+    #[test]
+    fn no_monitors_is_an_error() {
+        // otherwise no overlay opens and the guard is never released
+        assert!(require_monitors(Vec::new()).is_err());
+        let one = vec![Shot { x: 0, y: 0, width: 1, height: 1, png: Vec::new() }];
+        assert_eq!(require_monitors(one).unwrap().len(), 1);
     }
 }

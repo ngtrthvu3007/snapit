@@ -1,13 +1,12 @@
 import { FRAME, MASK_COLOR, SIZE_LABEL } from "./constants";
-import type { Rect } from "./geometry";
+import type { Rect, Scale } from "./geometry";
 import { drawShape, type Shape } from "./shapes";
 
 export type Scene = {
   img: HTMLImageElement;
   /** viewport size in CSS px */
   view: Rect;
-  /** physical image pixels per CSS pixel */
-  scale: number;
+  scale: Scale;
   selection: Rect | null;
   shapes: readonly Shape[];
 };
@@ -26,7 +25,7 @@ export function renderScene(ctx: CanvasRenderingContext2D, scene: Scene) {
 }
 
 function renderSelection(ctx: CanvasRenderingContext2D, { img, scale: k, shapes }: Scene, s: Rect) {
-  ctx.drawImage(img, s.x * k, s.y * k, s.w * k, s.h * k, s.x, s.y, s.w, s.h);
+  ctx.drawImage(img, s.x * k.x, s.y * k.y, s.w * k.x, s.h * k.y, s.x, s.y, s.w, s.h);
   ctx.save();
   ctx.beginPath();
   ctx.rect(s.x, s.y, s.w, s.h);
@@ -49,9 +48,9 @@ function renderFrame(ctx: CanvasRenderingContext2D, s: Rect) {
 }
 
 /** "W × H" in physical pixels, above the selection (inside it when there's no room). */
-function renderSizeLabel(ctx: CanvasRenderingContext2D, s: Rect, scale: number) {
+function renderSizeLabel(ctx: CanvasRenderingContext2D, s: Rect, k: Scale) {
   const L = SIZE_LABEL;
-  const text = `${Math.round(s.w * scale)} × ${Math.round(s.h * scale)}`;
+  const text = `${Math.round(s.w * k.x)} × ${Math.round(s.h * k.y)}`;
   ctx.save();
   ctx.font = L.font;
   const width = ctx.measureText(text).width + 2 * L.paddingX;

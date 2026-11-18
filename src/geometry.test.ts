@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { applyDrag, hitHandle, isValidSelection, normalizeRect } from "./geometry";
+import { applyDrag, hitHandle, isValidSelection, normalizeRect, settleSelection } from "./geometry";
 
 const bounds = { x: 0, y: 0, w: 500, h: 500 };
 const r = { x: 10, y: 10, w: 100, h: 50 };
@@ -30,4 +30,18 @@ test("applyDrag resize past the opposite edge flips and clamps", () => {
   // e-handle: x2 110 → -40, normalized -40..10, clamped 0..10
   expect(applyDrag(r, "e", -150, 0, bounds)).toEqual({ x: 0, y: 10, w: 10, h: 50 });
   expect(applyDrag(r, "se", 10, 20, bounds)).toEqual({ x: 10, y: 10, w: 110, h: 70 });
+});
+
+test("settleSelection keeps a valid result", () => {
+  const r = { x: 1, y: 1, w: 50, h: 50 };
+  expect(settleSelection(r, null)).toEqual(r);
+});
+
+test("settleSelection drops a click-sized new selection", () => {
+  expect(settleSelection({ x: 1, y: 1, w: 1, h: 1 }, null)).toBeNull();
+});
+
+test("settleSelection reverts a resize that collapsed the selection", () => {
+  const orig = { x: 1, y: 1, w: 50, h: 50 };
+  expect(settleSelection({ x: 0, y: 1, w: 0, h: 50 }, orig)).toEqual(orig);
 });

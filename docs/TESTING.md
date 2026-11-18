@@ -55,3 +55,18 @@ macOS `.dmg` built on the company Mac: `src-tauri/target/release/bundle/dmg/Snap
 - [ ] Install the `.dmg` on a personal Mac, follow README install steps exactly; note anything that differs.
 - [ ] **Ubuntu:** `npm run tauri build` → `.deb` + `.AppImage` in `src-tauri/target/release/bundle/`; fix README's apt dependency list if something was missing.
 - [ ] Full pass of every section above on both machines, then fill the spec's "Spike results" + README "Known limitations".
+
+## After code review (fixes to verify on real hardware)
+
+- [ ] Close an overlay with Alt+F4 (Linux) / force-quit its window → hotkey works again.
+- [ ] Multi-monitor Mac: right after the hotkey, drag on the monitor that isn't focused → selection starts on the first drag.
+- [ ] Multi-monitor Ubuntu Wayland: each monitor gets its own overlay with its own image.
+- [ ] Linux: overlay goes fullscreen after appearing → drawing lines up with the cursor; exported crop matches the selection.
+- [ ] Save → Cancel → overlay comes back with selection and drawings intact. Hotkey while the save dialog is open does nothing.
+- [ ] Save as `foo` (no extension) → `foo.png` written.
+- [ ] Copy failure (hard to force; e.g. no clipboard manager on a minimal Linux session) → red message inside the overlay, overlay stays.
+- [ ] Fractional scaling 1.25× / 1.5× (Ubuntu) → exported image is sharp, size label matches the PNG.
+- [ ] Broken `config.json` (e.g. trailing comma) → startup error naming the file; file unchanged; autostart unchanged. (Verified on Mac via log.)
+- [ ] Tray → Capture: the closing tray menu isn't in the screenshot.
+- [ ] macOS: ⌘H / ⌘Q while an overlay is focused — note what happens.
+- [ ] Release build first launched from the mounted DMG, then copied to Applications and relaunched → login item points to /Applications.

@@ -13,8 +13,16 @@ pub fn is_enabled(app: &AppHandle) -> bool {
 }
 
 /// Start at login by default, but only on the very first launch: a user who turned it off keeps it off.
-pub fn init_once(app: &AppHandle, cfg_dir: &Path, mut cfg: Config) {
+/// When already on, re-registers so the login item follows the app if it moved (e.g. first run from the DMG).
+/// Dev builds never touch the login item.
+pub fn init(app: &AppHandle, cfg_dir: &Path, mut cfg: Config) {
+    if cfg!(debug_assertions) {
+        return;
+    }
     if cfg.autostart_initialized {
+        if is_enabled(app) {
+            let _ = app.autolaunch().enable();
+        }
         return;
     }
     if let Err(e) = app.autolaunch().enable() {

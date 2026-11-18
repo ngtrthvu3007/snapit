@@ -1,5 +1,5 @@
 import { DEFAULT_COLOR } from "./constants";
-import { applyDrag, clampPoint, type Handle, hitHandle, isValidSelection, normalizeRect, type Point, type Rect } from "./geometry";
+import { applyDrag, clampPoint, type Handle, hitHandle, normalizeRect, type Point, type Rect, type Scale, settleSelection } from "./geometry";
 import { renderScene } from "./renderer";
 import { FREEHAND_TOOLS, newShape, newShapeStack, type Shape, textShape, type Tool } from "./shapes";
 import { TextInput } from "./text-input";
@@ -20,8 +20,6 @@ export class Editor {
   readonly shapes = newShapeStack();
   tool: Tool | null = null;
   color = DEFAULT_COLOR;
-  /** physical image pixels per CSS pixel */
-  readonly scale: number;
   /** called after every render */
   onChange: () => void = () => {};
 
@@ -34,16 +32,19 @@ export class Editor {
     private readonly canvas: HTMLCanvasElement,
     readonly img: HTMLImageElement,
   ) {
-    const dpr = devicePixelRatio;
-    canvas.width = innerWidth * dpr;
-    canvas.height = innerHeight * dpr;
     this.ctx = canvas.getContext("2d")!;
-    this.ctx.scale(dpr, dpr);
-    this.scale = img.naturalWidth / innerWidth;
+    // the window can still change size after it's shown (Linux maps fullscreen late)
+    addEventListener("resize", () => this.fitCanvas());
+    this.fitCanvas(false);
     canvas.addEventListener("pointerdown", (e) => this.onPointerDown(e));
     canvas.addEventListener("pointermove", (e) => this.onPointerMove(e));
     canvas.addEventListener("pointerup", () => this.onPointerUp());
     this.render();
+  }
+
+  /** Physical image pixels per CSS pixel; read live because the window size can change. */
+  get scale(): Scale {
+    return { x: this.img.naturalWidth / innerWidth, y: this.img.naturalHeight / innerHeight };
   }
 
   get bounds(): Rect {
@@ -87,6 +88,15 @@ export class Editor {
     this.onChange();
   }
 
+  /** Sizes the canvas backing store to the window at device resolution. */
+  private fitCanvas(redraw = true) {
+    const dpr = devicePixelRatio;
+    this.canvas.width = innerWidth * dpr;
+    this.canvas.height = innerHeight * dpr;
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (redraw) this.render();
+  }
+
   // ── pointer handling ────────────────────────────────────────────────
 
   private onPointerDown(e: PointerEvent) {
@@ -113,8 +123,8 @@ export class Editor {
       if (this.drawing.points.length > 1) this.shapes.push(this.drawing);
       this.drawing = null;
     }
+    if (this.drag && this.selection) this.selection = settleSelection(this.selection, this.drag.orig);
     this.drag = null;
-    if (this.selection && !isValidSelection(this.selection)) this.selection = null;
     this.render();
   }
 
