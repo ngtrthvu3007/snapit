@@ -21,3 +21,12 @@ Run with `npm run tauri dev` (stderr shows `captured N monitor(s) in …`).
 - [ ] Multi-monitor: one overlay per monitor, each showing its own screen.
 - [ ] **Ubuntu Wayland:** does a portal permission dialog appear? Every capture or only once? With 2 monitors, once per monitor? (risk 2)
 - [ ] **Ubuntu Wayland:** which monitor does each overlay land on? (risk 1)
+
+## Task 5 — copy / save
+
+- [ ] ⌘C / Ctrl+C → overlay closes; paste into Preview (File → New from Clipboard) / GIMP / LibreOffice shows the crop with annotations.
+- [ ] Retina: pasted image is 2× the selection's on-screen size (label shows the same numbers).
+- [ ] ⌘S / Ctrl+S → overlay closes, save dialog opens in ~/Pictures with `Snapit_YYYY-MM-DD_HH-MM-SS.png`; saved file opens correctly. Cancel → nothing saved, no error.
+- [ ] Toolbar copy/save buttons do the same.
+- [ ] Text box still open when pressing copy → typed text is included.
+- [ ] **Ubuntu Wayland (risk 3):** after copy and overlay closed, paste still works in another app. If not → spec fallback (copy also saves to ~/Pictures + notification).

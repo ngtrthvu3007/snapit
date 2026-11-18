@@ -43,6 +43,7 @@ export function mountToolbar(editor: Editor, onCopy: () => void, onSave: () => v
   });
   const custom = document.createElement("input");
   custom.type = "color";
+  custom.value = editor.color;
   custom.title = "Custom color";
   custom.setAttribute("aria-label", "Custom color");
   custom.addEventListener("input", () => setColor(custom.value));

@@ -49,7 +49,8 @@ export class Editor {
     this.render();
   }
 
-  commitText(text: string) {
+  /** Commits the open text box; defaults to what was typed so far. */
+  commitText(text = this.textBox?.el.value ?? "") {
     const tb = this.textBox;
     if (!tb) return;
     this.textBox = null;

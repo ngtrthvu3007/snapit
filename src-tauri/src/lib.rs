@@ -1,4 +1,5 @@
 mod capture;
+mod output;
 mod overlay;
 
 use std::time::Instant;
@@ -51,6 +52,7 @@ pub fn show_error(app: &AppHandle, msg: &str) {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_clipboard_manager::init())
         .manage(Shots::default())
         .manage(CaptureGuard::default())
         // shot://localhost/<monitor index> → frozen PNG for that overlay
@@ -65,7 +67,7 @@ pub fn run() {
             }
             .unwrap()
         })
-        .invoke_handler(tauri::generate_handler![overlay::close_overlays])
+        .invoke_handler(tauri::generate_handler![overlay::close_overlays, output::copy_png, output::save_png])
         .setup(|app| {
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
