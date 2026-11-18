@@ -7,7 +7,10 @@ use tauri::{
 use tauri_plugin_clipboard_manager::ClipboardExt;
 use tauri_plugin_dialog::DialogExt;
 
-use crate::{overlay::close_overlays, show_error};
+use crate::{dialog::show_error, overlay::close_overlays};
+
+const PNG_FILTER_NAME: &str = "PNG";
+const PNG_EXTENSION: &str = "png";
 
 pub fn default_filename(y: i32, mo: u8, d: u8, h: u8, mi: u8, s: u8) -> String {
     format!("Snapit_{y:04}-{mo:02}-{d:02}_{h:02}-{mi:02}-{s:02}.png")
@@ -53,7 +56,7 @@ pub async fn save_png(app: AppHandle, request: Request<'_>) -> Result<bool, Stri
         now.minute() as u8,
         now.second() as u8,
     );
-    let mut dialog = app.dialog().file().set_file_name(name).add_filter("PNG", &["png"]);
+    let mut dialog = app.dialog().file().set_file_name(name).add_filter(PNG_FILTER_NAME, &[PNG_EXTENSION]);
     if let Ok(dir) = app.path().picture_dir() {
         dialog = dialog.set_directory(dir);
     }

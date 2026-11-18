@@ -1,9 +1,19 @@
-use std::{io, path::Path};
+use std::{
+    io,
+    path::{Path, PathBuf},
+};
 
 use serde::{Deserialize, Serialize};
 
+const FILE_NAME: &str = "config.json";
+/// Env var the desktop session sets to "wayland" or "x11".
+pub const SESSION_TYPE_ENV: &str = "XDG_SESSION_TYPE";
+const WAYLAND: &str = "wayland";
+const MACOS_DEFAULT_HOTKEY: &str = "CommandOrControl+Shift+2";
+const LINUX_DEFAULT_HOTKEY: &str = "PrintScreen";
+
 /// `<app config dir>/config.json`, edited by hand. Missing fields fall back to defaults.
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(default)]
 pub struct Config {
     pub hotkey: String,
@@ -17,11 +27,15 @@ impl Default for Config {
 }
 
 pub fn default_hotkey() -> &'static str {
-    if cfg!(target_os = "macos") { "CommandOrControl+Shift+2" } else { "PrintScreen" }
+    if cfg!(target_os = "macos") { MACOS_DEFAULT_HOTKEY } else { LINUX_DEFAULT_HOTKEY }
+}
+
+pub fn file_path(dir: &Path) -> PathBuf {
+    dir.join(FILE_NAME)
 }
 
 pub fn load(dir: &Path) -> Config {
-    std::fs::read_to_string(dir.join("config.json"))
+    std::fs::read_to_string(file_path(dir))
         .ok()
         .and_then(|s| serde_json::from_str(&s).ok())
         .unwrap_or_default()
@@ -29,11 +43,11 @@ pub fn load(dir: &Path) -> Config {
 
 pub fn save(dir: &Path, c: &Config) -> io::Result<()> {
     std::fs::create_dir_all(dir)?;
-    std::fs::write(dir.join("config.json"), serde_json::to_string_pretty(c)?)
+    std::fs::write(file_path(dir), serde_json::to_string_pretty(c)?)
 }
 
 pub fn is_wayland(session_type: Option<&str>) -> bool {
-    session_type == Some("wayland")
+    session_type == Some(WAYLAND)
 }
 
 #[cfg(test)]
@@ -59,7 +73,7 @@ mod tests {
     fn invalid_config_gives_default() {
         let d = tmp("invalid");
         std::fs::create_dir_all(&d).unwrap();
-        std::fs::write(d.join("config.json"), "{oops").unwrap();
+        std::fs::write(file_path(&d), "{oops").unwrap();
         assert_eq!(load(&d).hotkey, default_hotkey());
     }
 
@@ -67,7 +81,7 @@ mod tests {
     fn partial_config_fills_defaults() {
         let d = tmp("partial");
         std::fs::create_dir_all(&d).unwrap();
-        std::fs::write(d.join("config.json"), r#"{"hotkey":"F1"}"#).unwrap();
+        std::fs::write(file_path(&d), r#"{"hotkey":"F1"}"#).unwrap();
         let c = load(&d);
         assert_eq!(c.hotkey, "F1");
         assert!(!c.autostart_initialized);

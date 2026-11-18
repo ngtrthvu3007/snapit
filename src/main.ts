@@ -1,40 +1,42 @@
-import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { SHORTCUT_CODES } from "./constants";
 import { Editor } from "./editor";
 import { composeExport } from "./export";
+import { closeOverlays, copyPng, monitorFromLabel, savePng, shotUrl } from "./ipc";
 import { mountToolbar } from "./toolbar";
 
 const win = getCurrentWindow();
-const monitor = win.label.split("-")[1];
 
 const img = new Image();
 img.crossOrigin = "anonymous"; // keep the export canvas untainted
-img.src = `shot://localhost/${monitor}`;
+img.src = shotUrl(monitorFromLabel(win.label));
 await img.decode();
 const canvas = document.createElement("canvas");
 document.body.append(canvas);
 const editor = new Editor(canvas, img);
 
-const close = () => invoke("close_overlays");
-/** Rust closes the overlays itself (copy: on success; save: before the dialog). Errors are shown by Rust. */
-async function output(cmd: "copy_png" | "save_png") {
+async function exportSelection(send: (png: Uint8Array) => Promise<unknown>) {
   if (!editor.selection) return;
   editor.commitText();
   const png = await composeExport(img, editor.selection, editor.shapes.items, editor.scale);
-  await invoke(cmd, png).catch(console.error);
+  await send(png).catch(console.error);
 }
+const copy = () => exportSelection(copyPng);
+const save = () => exportSelection(savePng);
 
-mountToolbar(editor, () => output("copy_png"), () => output("save_png"), close);
+mountToolbar(editor, { copy, save, close: closeOverlays });
 await win.show();
 await win.setFocus();
 
+const SHORTCUTS: Record<string, () => unknown> = {
+  [SHORTCUT_CODES.copy]: copy,
+  [SHORTCUT_CODES.save]: save,
+  [SHORTCUT_CODES.undo]: () => editor.undo(),
+};
+
 addEventListener("keydown", (e) => {
-  const cmd = e.metaKey || e.ctrlKey;
-  const key = e.key.toLowerCase();
-  if (e.key === "Escape") close();
-  else if (cmd && key === "z") editor.undo();
-  else if (cmd && key === "c") output("copy_png");
-  else if (cmd && key === "s") output("save_png");
-  else return;
+  const action = e.key === "Escape" ? closeOverlays : (e.metaKey || e.ctrlKey) && SHORTCUTS[e.code];
+  if (!action) return;
   e.preventDefault();
+  action();
 });

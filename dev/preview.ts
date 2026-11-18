@@ -24,5 +24,5 @@ const canvas = document.createElement("canvas");
 document.body.append(canvas);
 const editor = new Editor(canvas, img);
 (window as any).editor = editor;
-mountToolbar(editor, () => console.log("copy"), () => console.log("save"), () => console.log("close"));
+mountToolbar(editor, { copy: () => console.log("copy"), save: () => console.log("save"), close: () => console.log("close") });
 addEventListener("keydown", (e) => (e.metaKey || e.ctrlKey) && e.key === "z" && editor.undo());

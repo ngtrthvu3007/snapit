@@ -1,74 +1,32 @@
+//! Snapit: tray app → hotkey → frozen-screen overlays → copy/save. This file only wires the pieces together.
+
+mod autostart;
 mod capture;
 mod config;
+mod dialog;
+mod hotkey;
 mod output;
 mod overlay;
-
-use std::time::Instant;
+mod tray;
 
 use capture::{CaptureGuard, Shots};
-use tauri::{
-    AppHandle, Manager, RunEvent,
-    http::Response,
-    menu::{CheckMenuItem, Menu, MenuItem},
-    tray::TrayIconBuilder,
-};
-use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
-use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
-use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
+use tauri::{Manager, RunEvent};
+use tauri_plugin_autostart::MacosLauncher;
 
-pub fn trigger_capture(app: &AppHandle) {
-    if !app.state::<CaptureGuard>().try_begin() {
-        return;
-    }
-    let app = app.clone();
-    std::thread::spawn(move || {
-        let t = Instant::now();
-        match capture::capture_all() {
-            Ok(shots) => {
-                eprintln!("captured {} monitor(s) in {:?}", shots.len(), t.elapsed());
-                *app.state::<Shots>().0.lock().unwrap() = shots;
-                let a = app.clone();
-                let _ = app.run_on_main_thread(move || {
-                    if let Err(e) = overlay::open_overlays(&a) {
-                        overlay::close_overlays(a.clone());
-                        show_error(&a, &e.to_string());
-                    }
-                });
-            }
-            Err(e) => {
-                app.state::<CaptureGuard>().end();
-                show_error(&app, &e);
-            }
-        }
-    });
-}
+/// `snapit --capture` starts a capture (in the already-running instance, if any).
+const CAPTURE_FLAG: &str = "--capture";
 
-fn toggle_autostart(app: &AppHandle, item: &CheckMenuItem<tauri::Wry>) {
-    let al = app.autolaunch();
-    // derive from the real state, not the menu's own auto-toggled check mark
-    let want = !al.is_enabled().unwrap_or(false);
-    if let Err(e) = if want { al.enable() } else { al.disable() } {
-        show_error(app, &format!("Could not change \"Start at login\": {e}"));
-    }
-    let _ = item.set_checked(al.is_enabled().unwrap_or(false));
-}
-
-pub fn show_error(app: &AppHandle, msg: &str) {
-    eprintln!("error: {msg}");
-    app.dialog()
-        .message(msg)
-        .title("Snapit")
-        .kind(MessageDialogKind::Error)
-        .show(|_| {});
+fn wants_capture<S: AsRef<str>>(args: &[S]) -> bool {
+    args.iter().any(|a| a.as_ref() == CAPTURE_FLAG)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        // must be first: a second `snapit --capture` forwards to the running instance and exits
+        // must be first: a second launch forwards its arguments here and exits
         .plugin(tauri_plugin_single_instance::init(|app, argv, _| {
-            if argv.iter().any(|a| a == "--capture") {
-                trigger_capture(app);
+            if wants_capture(&argv) {
+                capture::trigger(app);
             }
         }))
         .plugin(tauri_plugin_dialog::init())
@@ -76,92 +34,40 @@ pub fn run() {
         .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, None))
         .manage(Shots::default())
         .manage(CaptureGuard::default())
-        // shot://localhost/<monitor index> → frozen PNG for that overlay
-        .register_uri_scheme_protocol("shot", |ctx, req| {
-            let idx: usize = req.uri().path().trim_start_matches('/').parse().unwrap_or(usize::MAX);
-            let shots = ctx.app_handle().state::<Shots>();
-            let shots = shots.0.lock().unwrap();
-            let res = Response::builder().header("Access-Control-Allow-Origin", "*");
-            match shots.get(idx) {
-                Some(s) => res.header("Content-Type", "image/png").body(s.png.clone()),
-                None => res.status(404).body(Vec::new()),
-            }
-            .unwrap()
-        })
+        .register_uri_scheme_protocol(overlay::SHOT_SCHEME, |ctx, req| overlay::serve_shot(ctx.app_handle(), &req))
         .invoke_handler(tauri::generate_handler![overlay::close_overlays, output::copy_png, output::save_png])
         .setup(|app| {
             #[cfg(target_os = "macos")]
-            app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+            app.set_activation_policy(tauri::ActivationPolicy::Accessory); // tray only, no Dock icon
 
             let cfg_dir = app.path().app_config_dir()?;
-            let mut cfg = config::load(&cfg_dir);
-            if !cfg.autostart_initialized {
-                // start at login by default, but only once: a user who turned it off keeps it off
-                if let Err(e) = app.autolaunch().enable() {
-                    eprintln!("error: enabling autostart: {e}");
-                }
-                cfg.autostart_initialized = true;
-                if let Err(e) = config::save(&cfg_dir, &cfg) {
-                    eprintln!("error: saving config: {e}");
-                }
-            }
+            let cfg = config::load(&cfg_dir);
+            autostart::init_once(app.handle(), &cfg_dir, cfg.clone());
+            tray::build(app.handle())?;
+            hotkey::register(app.handle(), &cfg.hotkey, &cfg_dir)?;
 
-            let capture = MenuItem::with_id(app, "capture", "Capture", true, None::<&str>)?;
-            let autostart = CheckMenuItem::with_id(
-                app,
-                "autostart",
-                "Start at login",
-                true,
-                app.autolaunch().is_enabled().unwrap_or(false),
-                None::<&str>,
-            )?;
-            let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
-            let menu = Menu::with_items(app, &[&capture, &autostart, &quit])?;
-
-            TrayIconBuilder::with_id("tray")
-                .icon(app.default_window_icon().unwrap().clone())
-                .menu(&menu)
-                .on_menu_event(move |app, e| match e.id.as_ref() {
-                    "capture" => trigger_capture(app),
-                    "autostart" => toggle_autostart(app, &autostart),
-                    "quit" => app.exit(0),
-                    _ => {}
-                })
-                .build(app)?;
-
-            // Wayland apps can't grab global keys; users bind `snapit --capture` in their desktop settings
-            if !config::is_wayland(std::env::var("XDG_SESSION_TYPE").ok().as_deref()) {
-                app.handle().plugin(
-                    tauri_plugin_global_shortcut::Builder::new()
-                        .with_handler(|app, _, ev| {
-                            if ev.state == ShortcutState::Pressed {
-                                trigger_capture(app);
-                            }
-                        })
-                        .build(),
-                )?;
-                if let Err(e) = app.global_shortcut().register(cfg.hotkey.as_str()) {
-                    show_error(
-                        app.handle(),
-                        &format!(
-                            "Could not register hotkey \"{}\": {e}\nSet another \"hotkey\" in {} and restart Snapit.",
-                            cfg.hotkey,
-                            cfg_dir.join("config.json").display()
-                        ),
-                    );
-                }
-            }
-            if std::env::args().any(|a| a == "--capture") {
-                trigger_capture(app.handle());
+            if wants_capture(&std::env::args().collect::<Vec<_>>()) {
+                capture::trigger(app.handle());
             }
             Ok(())
         })
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
         .run(|_, e| {
-            // keep running in tray when the last overlay window closes
+            // keep running in the tray when the last overlay window closes
             if let RunEvent::ExitRequested { code: None, api, .. } = e {
                 api.prevent_exit();
             }
         });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn capture_flag_detected() {
+        assert!(wants_capture(&["snapit", "--capture"]));
+        assert!(!wants_capture(&["snapit"]));
+    }
 }

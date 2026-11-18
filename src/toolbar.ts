@@ -1,63 +1,59 @@
+import { PALETTE, TOOLBAR_GAP, TOOLS } from "./constants";
 import type { Editor } from "./editor";
-import type { Tool } from "./shapes";
+import { clamp, type Rect } from "./geometry";
 
-const TOOLS: [Tool, string, string][] = [
-  ["pen", "✎", "Pen"],
-  ["line", "╱", "Line"],
-  ["arrow", "➚", "Arrow"],
-  ["rect", "▭", "Rectangle"],
-  ["marker", "▮", "Marker"],
-  ["text", "T", "Text"],
-];
-const PALETTE = ["#ff3b30", "#ff9500", "#ffcc00", "#34c759", "#007aff", "#af52de", "#000000", "#ffffff"];
-const mod = navigator.platform.startsWith("Mac") ? "⌘" : "Ctrl+";
+type Size = { w: number; h: number };
+export type ToolbarActions = { copy: () => void; save: () => void; close: () => void };
 
-export function mountToolbar(editor: Editor, onCopy: () => void, onSave: () => void, onClose: () => void) {
+const MOD_KEY_LABEL = navigator.platform.startsWith("Mac") ? "⌘" : "Ctrl+";
+
+/** Below the selection, right-aligned; above it if no room; inside its bottom if neither fits. */
+export function toolbarPosition(sel: Rect, bar: Size, view: Size): { left: number; top: number } {
+  let top = sel.y + sel.h + TOOLBAR_GAP;
+  if (top + bar.h > view.h) top = sel.y - bar.h - TOOLBAR_GAP;
+  if (top < 0) top = sel.y + sel.h - bar.h - TOOLBAR_GAP;
+  const left = clamp(sel.x + sel.w - bar.w, 0, view.w - bar.w);
+  return { left, top };
+}
+
+export function mountToolbar(editor: Editor, actions: ToolbarActions) {
   const bar = document.createElement("div");
   bar.id = "toolbar";
-  const button = (label: string, title: string, onClick: () => void) => {
-    const b = document.createElement("button");
-    b.textContent = label;
-    b.title = title;
-    b.setAttribute("aria-label", title);
-    b.addEventListener("click", onClick);
-    bar.append(b);
-    return b;
-  };
-  const sep = () => bar.append(Object.assign(document.createElement("span"), { className: "sep" }));
 
-  const toolButtons = TOOLS.map(([tool, icon, name]) => {
-    const b = button(icon, name, () => {
+  const toolButtons = TOOLS.map(({ tool, icon, name }) => {
+    const b = button(bar, icon, name, () => {
       editor.tool = editor.tool === tool ? null : tool;
       sync();
     });
     b.dataset.tool = tool;
     return b;
   });
-  sep();
-  const swatches = PALETTE.map((c) => {
-    const b = button("", c, () => setColor(c));
+  separator(bar);
+
+  const swatches = PALETTE.map((color) => {
+    const b = button(bar, "", color, () => setColor(color));
     b.className = "swatch";
-    b.style.background = c;
+    b.style.background = color;
     return b;
   });
   const custom = document.createElement("input");
   custom.type = "color";
   custom.value = editor.color;
   custom.title = "Custom color";
-  custom.setAttribute("aria-label", "Custom color");
+  custom.setAttribute("aria-label", custom.title);
   custom.addEventListener("input", () => setColor(custom.value));
   bar.append(custom);
-  sep();
-  button("↶", `Undo (${mod}Z)`, () => editor.undo());
-  button("⧉", `Copy (${mod}C)`, onCopy);
-  button("⤓", `Save (${mod}S)`, onSave);
-  button("✕", "Close (Esc)", onClose);
+  separator(bar);
+
+  button(bar, "↶", `Undo (${MOD_KEY_LABEL}Z)`, () => editor.undo());
+  button(bar, "⧉", `Copy (${MOD_KEY_LABEL}C)`, actions.copy);
+  button(bar, "⤓", `Save (${MOD_KEY_LABEL}S)`, actions.save);
+  button(bar, "✕", "Close (Esc)", actions.close);
   document.body.append(bar);
 
-  function setColor(c: string) {
-    editor.color = c;
-    custom.value = c;
+  function setColor(color: string) {
+    editor.color = color;
+    custom.value = color;
     sync();
   }
 
@@ -67,23 +63,34 @@ export function mountToolbar(editor: Editor, onCopy: () => void, onSave: () => v
   }
 
   function place() {
-    const s = editor.selection;
-    bar.hidden = !s || editor.adjusting;
-    if (bar.hidden || !s) return;
-    const { offsetWidth: bw, offsetHeight: bh } = bar;
-    const gap = 8;
-    let top = s.y + s.h + gap;
-    if (top + bh > innerHeight) top = s.y - bh - gap; // no room below → above
-    if (top < 0) top = s.y + s.h - bh - gap; // no room above either → inside, bottom
-    const left = Math.min(Math.max(s.x + s.w - bw, 0), innerWidth - bw);
+    const sel = editor.selection;
+    bar.hidden = !sel || editor.adjusting;
+    if (!sel || bar.hidden) return;
+    const { left, top } = toolbarPosition(sel, { w: bar.offsetWidth, h: bar.offsetHeight }, { w: innerWidth, h: innerHeight });
     bar.style.transform = `translate(${left}px, ${top}px)`;
   }
 
-  const prev = editor.onChange;
+  const previous = editor.onChange;
   editor.onChange = () => {
-    prev();
+    previous();
     place();
   };
   sync();
   place();
+}
+
+function button(parent: HTMLElement, label: string, title: string, onClick: () => void): HTMLButtonElement {
+  const b = document.createElement("button");
+  b.textContent = label;
+  b.title = title;
+  b.setAttribute("aria-label", title);
+  b.addEventListener("click", onClick);
+  parent.append(b);
+  return b;
+}
+
+function separator(parent: HTMLElement) {
+  const s = document.createElement("span");
+  s.className = "sep";
+  parent.append(s);
 }
