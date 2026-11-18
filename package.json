@@ -11,7 +11,7 @@
     "format": "prettier --write . && cargo fmt --manifest-path src-tauri/Cargo.toml",
     "docs:dev": "vitepress dev docs",
     "docs:build": "DOCS_BASE=${DOCS_BASE:-/docs/} vitepress build docs",
-    "site:build": "npm run docs:build && rm -rf _site && mkdir _site && cp -R web/. _site/ && cp -R docs/.vitepress/dist _site/docs && sed -i.bak \"s#__REPO_URL__#${REPO_URL:-https://github.com}#g\" _site/index.html && rm _site/index.html.bak",
+    "site:build": "SITE_URL=${SITE_URL:-http://localhost:4173/} npm run docs:build && rm -rf _site && mkdir _site && cp -R web/. _site/ && cp -R docs/.vitepress/dist _site/docs && sed -i.bak \"s#__REPO_URL__#${REPO_URL:-https://github.com}#g\" _site/index.html && rm _site/index.html.bak",
     "site:preview": "python3 -m http.server 4173 -d _site"
   },
   "dependencies": {

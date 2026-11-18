@@ -6,110 +6,123 @@
     <title>Snapit</title>
     <meta
       name="description"
-      content="Tool chụp màn hình kiểu Lightshot cho macOS và Linux. Bấm phím, kéo chọn, vẽ vài nét, copy là xong."
+      content="Tool chụp màn hình kiểu Lightshot cho Mac và Linux. Bấm một phím, khoanh vùng, vẽ vài nét, dán vào chat."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400;500&display=swap"
       rel="stylesheet"
     />
     <style>
-      /* Một cột đọc, ảnh chụp giao diện thật làm điểm nhấn. Màu đỏ là màu bút mặc định của Snapit. */
+      /* Một cột giữa trang, nói khẽ: tiêu đề và phần minh hoạ là thứ lớn duy nhất.
+         Mực xanh chai trên giấy trắng ngà; vàng chỉ ở nút và đúng một phần nền vàng. */
       :root {
-        --bg: #f6f6f3;
-        --surface: #ffffff;
-        --ink: #1c1c1a;
-        --muted: #5e5e58;
-        --line: #e2e2dc;
-        --accent: #e5352b;
-        --accent-ink: #ffffff;
-        --font: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", sans-serif;
-        --radius: 10px;
-        --page: min(1080px, 100% - 40px);
-      }
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --bg: #141413;
-          --surface: #1d1d1b;
-          --ink: #f0f0ec;
-          --muted: #a3a39b;
-          --line: #2e2e2b;
-          --accent: #ff5a4f;
-          --accent-ink: #141413;
-        }
+        --bg: #f7f7f5;
+        --surface: #ebebe8;
+        --ink: #0d2a1c;
+        --muted: #55625b;
+        --accent: #f6e016;
+        --accent-ink: #0d2a1c;
+        --field: #f6e016;
+        --field-ink: #0d2a1c;
+        --field-surface: #fbf3a6;
+
+        --font:
+          "Familjen Grotesk", "Be Vietnam Pro", system-ui, -apple-system, sans-serif;
+        --step-small: clamp(1rem, 0.97rem + 0.1vw, 1.0625rem);
+        --step-body: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
+        --step-lead: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
+        --step-head: clamp(1.75rem, 1.4rem + 1.4vw, 2.5rem);
+        --step-display: clamp(2.75rem, 1.2rem + 5.6vw, 6rem);
+
+        --column: min(600px, 100% - 48px);
+        --wide: min(960px, 100% - 48px);
+        --radius: 4px;
+        --section-gap: clamp(104px, 10vw, 152px);
+        --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
       }
 
       * {
         box-sizing: border-box;
       }
+      html {
+        scroll-behavior: smooth;
+      }
       body {
         margin: 0;
         background: var(--bg);
         color: var(--ink);
-        font: 17px/1.6 var(--font);
+        font: 400 var(--step-body) / 1.5 var(--font);
         -webkit-font-smoothing: antialiased;
+      }
+      h1,
+      h2,
+      h3,
+      p,
+      figure,
+      ol {
+        margin: 0;
       }
       a {
         color: inherit;
+        text-underline-offset: 4px;
       }
       img {
         display: block;
         max-width: 100%;
         height: auto;
+        border-radius: var(--radius);
       }
       :focus-visible {
-        outline: 3px solid var(--accent);
+        outline: 3px solid var(--ink);
         outline-offset: 3px;
       }
-      .page {
-        width: var(--page);
+      .column {
+        width: var(--column);
         margin-inline: auto;
       }
 
-      /* ── Thanh trên ── */
-      header {
+      /* ── Thanh trên: logo, tài liệu, ngôn ngữ ── */
+      .top {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 16px;
-        padding-block: 22px;
+        width: var(--wide);
+        margin: 0 auto;
+        padding-top: 40px;
       }
-      .logo {
+      .mark {
         display: inline-flex;
         align-items: center;
         gap: 10px;
-        font-weight: 800;
-        font-size: 20px;
+        font-weight: 500;
+        font-size: var(--step-lead);
         text-decoration: none;
       }
-      nav {
+      .top-links {
         display: flex;
         align-items: center;
-        gap: 22px;
-        font-weight: 500;
-      }
-      nav a {
-        text-decoration: none;
-        color: var(--muted);
-      }
-      nav a:hover {
-        color: var(--ink);
+        gap: 24px;
+        font-size: var(--step-small);
       }
       .lang {
         display: inline-flex;
-        border-radius: 999px;
-        background: var(--line);
-        padding: 3px;
+        gap: 2px;
       }
       .lang button {
+        padding: 4px 8px;
         border: 0;
-        border-radius: 999px;
-        padding: 4px 11px;
+        border-radius: var(--radius);
         background: transparent;
         color: var(--muted);
-        font: 600 13px var(--font);
+        font: 500 var(--step-small) var(--font);
         cursor: pointer;
+        transition: background-color 150ms;
+      }
+      .lang button:hover {
+        background: var(--surface);
       }
       .lang button[aria-pressed="true"] {
         background: var(--surface);
@@ -118,386 +131,772 @@
 
       /* ── Đầu trang ── */
       .hero {
-        padding-block: 56px 40px;
+        padding-top: clamp(96px, 18vh, 200px);
       }
       h1 {
-        margin: 0;
-        max-width: 19ch;
-        font-size: clamp(2.4rem, 1.4rem + 4vw, 4.4rem);
-        line-height: 1.05;
-        letter-spacing: -0.03em;
-        text-wrap: balance;
+        font-size: var(--step-display);
+        font-weight: 500;
+        line-height: 0.98;
+        letter-spacing: -0.035em;
       }
-      .lead {
-        max-width: 54ch;
-        margin: 22px 0 0;
-        font-size: 1.2rem;
-        color: var(--muted);
+      h1 span {
+        display: block;
+      }
+      .hero-sentence {
+        max-width: 46ch;
+        margin-top: 36px;
+        font-size: var(--step-lead);
+        line-height: 1.4;
       }
       .actions {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: 12px 20px;
-        margin-top: 30px;
+        gap: 12px 24px;
+        margin-top: 32px;
       }
       .button {
         display: inline-flex;
         align-items: center;
-        min-height: 50px;
-        padding: 0 24px;
+        min-height: 48px;
+        padding: 0 22px;
         border-radius: var(--radius);
         background: var(--accent);
         color: var(--accent-ink);
-        font-weight: 700;
+        font-weight: 500;
         text-decoration: none;
-        transition: transform 150ms;
+        transition: transform 160ms var(--ease);
       }
       .button:hover {
         transform: translateY(-2px);
       }
+      .button:active {
+        transform: translateY(0) scale(0.98);
+      }
       .text-link {
-        font-weight: 600;
-        text-underline-offset: 4px;
+        font-weight: 500;
       }
-      .fine {
-        margin: 14px 0 0;
-        font-size: 14px;
+      .hero-note {
+        margin-top: 16px;
+        font-size: var(--step-small);
         color: var(--muted);
       }
 
-      .shot {
-        margin: 8px 0 0;
+      /* Ô minh hoạ ở đầu trang: ba trạng thái của cùng một lần chụp, chuyển dần */
+      .states {
+        position: relative;
+        width: var(--wide);
+        margin: 72px auto 0;
+        aspect-ratio: 808 / 490;
       }
-      .shot img {
-        border-radius: var(--radius);
-        border: 1px solid var(--line);
+      .states img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
       }
-      .shot figcaption {
-        margin-top: 10px;
-        font-size: 14px;
-        color: var(--muted);
+      .states img + img {
+        opacity: 0; /* không có chuyển động: chỉ ảnh đầu (đã vẽ) hiện */
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .states img {
+          animation: crossfade 18s infinite;
+        }
+        /* ảnh đầu đã hiện sẵn lúc tải trang (bắt đầu giữa nhịp), hai ảnh sau nối tiếp */
+        .states img:nth-child(1) {
+          animation-delay: -1.6s;
+        }
+        .states img:nth-child(2) {
+          animation-delay: 4.4s;
+        }
+        .states img:nth-child(3) {
+          animation-delay: 10.4s;
+        }
+        .states.is-paused img {
+          animation-play-state: paused;
+        }
       }
 
-      /* ── Ba bước ── */
+      /* hiện 6 giây, chuyển 1,6 giây */
+      @keyframes crossfade {
+        0% {
+          opacity: 0;
+        }
+        9% {
+          opacity: 1;
+        }
+        33% {
+          opacity: 1;
+        }
+        42% {
+          opacity: 0;
+        }
+        100% {
+          opacity: 0;
+        }
+      }
+      .states-caption {
+        width: var(--wide);
+        margin: 14px auto 0;
+        font-size: var(--step-small);
+      }
+
+      /* ── Dùng thế nào: hỏi và đáp ── */
       section {
-        padding-block: 72px 0;
+        padding-top: var(--section-gap);
       }
       h2 {
-        margin: 0 0 28px;
-        font-size: clamp(1.7rem, 1.2rem + 1.6vw, 2.4rem);
+        font-size: var(--step-head);
+        font-weight: 500;
+        line-height: 1.1;
         letter-spacing: -0.02em;
-        line-height: 1.15;
       }
-      .steps {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 16px;
-        margin: 0;
+      .exchanges {
+        display: flex;
+        flex-direction: column;
+        gap: 88px;
+        margin-top: 56px;
         padding: 0;
         list-style: none;
       }
-      .steps li {
-        padding: 24px;
+      .exchange {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .exchange h3 {
+        font-size: var(--step-lead);
+        font-weight: 500;
+        line-height: 1.3;
+      }
+      .call {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px 16px;
+        padding: 20px;
         border-radius: var(--radius);
         background: var(--surface);
       }
-      .steps h3 {
-        margin: 0 0 6px;
-        font-size: 1.15rem;
-      }
-      .steps p {
-        margin: 0;
-        color: var(--muted);
+      .keys {
+        display: inline-flex;
+        gap: 6px;
       }
       kbd {
-        display: inline-block;
-        min-width: 1.7em;
-        padding: 0 6px;
-        border-radius: 6px;
-        background: var(--line);
-        font: inherit;
-        font-weight: 700;
-        text-align: center;
-      }
-
-      /* ── Có gì ── */
-      .features {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-        gap: 40px;
-        align-items: start;
-      }
-      .features ul {
-        margin: 0;
-        padding-left: 1.2em;
-        display: grid;
-        gap: 10px;
-      }
-      .features li::marker {
-        color: var(--accent);
-      }
-      .toolbar {
-        padding: 22px;
+        display: inline-grid;
+        place-items: center;
+        min-width: 40px;
+        height: 40px;
+        padding: 0 10px;
         border-radius: var(--radius);
-        background: var(--surface);
+        background: var(--bg);
+        font: 500 var(--step-body) var(--font);
       }
-      .toolbar img {
+      .call-note {
+        color: var(--ink);
+      }
+      .call img {
         width: 100%;
         max-width: 514px;
       }
-      .toolbar p {
-        margin: 14px 0 0;
-        font-size: 15px;
-        color: var(--muted);
+      .response {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-left: 56px;
+      }
+      .response figcaption {
+        font-size: var(--step-small);
+      }
+      .exchange-final .response {
+        width: var(--wide);
+        margin-left: calc((var(--column) - var(--wide)) / 2);
       }
 
-      /* ── Cuối trang ── */
+      /* ── Bật tắt thử: phần nền vàng duy nhất ── */
+      .try {
+        margin-top: var(--section-gap);
+        padding-bottom: var(--section-gap);
+        background: var(--field);
+        color: var(--field-ink);
+      }
+      .try-intro {
+        width: var(--wide);
+        margin: 0 auto;
+      }
+      .try-intro p {
+        max-width: 52ch;
+        margin-top: 16px;
+      }
+      .panel {
+        display: grid;
+        grid-template-columns: minmax(0, 62fr) minmax(0, 38fr);
+        width: var(--wide);
+        margin: 48px auto 0;
+        border-radius: 12px;
+        overflow: hidden;
+        background: var(--bg);
+      }
+      .panel-picture {
+        position: relative;
+        align-self: center;
+        margin: 20px;
+      }
+      .panel-picture img + img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        transition: opacity 260ms var(--ease);
+      }
+      .panel-picture img[hidden] {
+        display: block !important;
+        opacity: 0;
+      }
+      .controls {
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        background: var(--surface);
+      }
+      .control {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        min-height: 44px;
+        font-size: var(--step-small);
+      }
+      .control + .control {
+        margin-top: 4px;
+      }
+      .control output {
+        font-weight: 500;
+        font-variant-numeric: tabular-nums;
+        text-align: right;
+        overflow-wrap: anywhere;
+      }
+      /* công tắc: checkbox thật, vẽ lại bằng CSS */
+      .switch {
+        appearance: none;
+        flex: none;
+        width: 40px;
+        height: 24px;
+        margin: 0;
+        border-radius: 12px;
+        background: #c9ccc7;
+        position: relative;
+        cursor: pointer;
+        transition: background-color 160ms;
+      }
+      .switch::after {
+        content: "";
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--bg);
+        transition: transform 160ms var(--ease);
+      }
+      .switch:checked {
+        background: var(--ink);
+      }
+      .switch:checked::after {
+        transform: translateX(16px);
+      }
+      .controls .text-link {
+        margin-top: auto;
+        padding-top: 16px;
+        font-size: var(--step-small);
+      }
+      .try-note {
+        width: var(--wide);
+        margin: 16px auto 0;
+        font-size: var(--step-small);
+      }
+
+      /* ── Lời mời cuối ── */
       .closing {
-        padding-block: 80px;
+        padding-top: clamp(160px, 30svh, 280px);
+        padding-bottom: clamp(120px, 20svh, 200px);
       }
-      .closing p {
-        margin: 0 0 24px;
-        font-size: 1.2rem;
-        color: var(--muted);
-      }
-      footer {
-        padding-block: 28px 40px;
-        border-top: 1px solid var(--line);
-        font-size: 14px;
-        color: var(--muted);
+      .closing h2 {
+        max-width: 34ch;
+        font-size: var(--step-lead);
+        line-height: 1.4;
+        letter-spacing: 0;
       }
 
-      @media (max-width: 720px) {
-        nav .hide-small {
+      /* ── Dòng cuối trang ── */
+      footer {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: baseline;
+        gap: 16px;
+        width: var(--wide);
+        margin: 0 auto;
+        padding-bottom: 30px;
+        font-size: var(--step-small);
+        color: var(--muted);
+      }
+      footer nav {
+        display: flex;
+        gap: 24px;
+      }
+      footer nav a {
+        color: var(--ink);
+      }
+      footer .year {
+        text-align: right;
+      }
+
+      /* ── Hiện dần khi cuộn tới (chỉ khi script chạy) ── */
+      @media (prefers-reduced-motion: no-preference) {
+        .can-reveal [data-reveal] {
+          opacity: 0;
+          transform: translateY(22px);
+          transition:
+            opacity 700ms var(--ease),
+            transform 700ms var(--ease);
+          transition-delay: calc(var(--order, 0) * 80ms);
+        }
+        .can-reveal [data-reveal].is-in {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      /* ── Điện thoại ── */
+      @media (max-width: 760px) {
+        :root {
+          --column: calc(100% - 40px);
+          --wide: calc(100% - 40px);
+        }
+        .top {
+          width: calc(100% - 40px);
+          padding-top: 28px;
+        }
+        .top-links .docs-link {
           display: none;
         }
         .hero {
-          padding-block: 28px 28px;
+          padding-top: 22vh;
         }
-        .steps,
-        .features {
+        .states {
+          margin-top: 48px;
+        }
+        .response {
+          margin-left: 0;
+        }
+        .exchange-final .response {
+          width: 100%;
+          margin-left: 0;
+        }
+        .panel {
           grid-template-columns: 1fr;
         }
-        section {
-          padding-block-start: 56px;
+        .panel-picture {
+          margin: 12px;
+        }
+        footer {
+          grid-template-columns: 1fr;
+          gap: 8px;
+          width: calc(100% - 40px);
+        }
+        footer nav {
+          flex-wrap: wrap;
+          gap: 8px 20px;
+        }
+        footer .year {
+          text-align: left;
         }
       }
     </style>
   </head>
 
   <body>
-    <div class="page">
-      <header>
-        <a class="logo" href="./">
-          <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true">
-            <rect
-              x="3"
-              y="3"
-              width="26"
-              height="26"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.5"
-              stroke-dasharray="5 3.5"
-            />
-            <rect x="0" y="0" width="7" height="7" fill="#e5352b" />
-            <rect x="25" y="25" width="7" height="7" fill="#e5352b" />
-          </svg>
-          Snapit
-        </a>
-        <nav>
-          <a
-            class="hide-small"
-            href="./docs/"
-            data-href-en="./docs/en/"
-            data-i18n="nav.docs"
-            >Tài liệu</a
-          >
-          <a class="hide-small" href="__REPO_URL__">GitHub</a>
-          <span class="lang" role="group" aria-label="Ngôn ngữ / Language">
-            <button type="button" data-lang="vi" aria-pressed="true">VI</button>
-            <button type="button" data-lang="en" aria-pressed="false">EN</button>
-          </span>
-        </nav>
-      </header>
+    <header class="top">
+      <a class="mark" href="./">
+        <svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true">
+          <rect
+            x="3"
+            y="3"
+            width="26"
+            height="26"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-dasharray="5 3.5"
+          />
+          <rect x="0" y="0" width="7" height="7" fill="currentColor" />
+          <rect x="25" y="25" width="7" height="7" fill="currentColor" />
+        </svg>
+        Snapit
+      </a>
+      <div class="top-links">
+        <a class="docs-link" href="./docs/" data-href-en="./docs/en/" data-i18n="nav.docs"
+          >Tài liệu</a
+        >
+        <span class="lang" role="group" aria-label="Ngôn ngữ / Language">
+          <button type="button" data-lang="vi" aria-pressed="true">VI</button>
+          <button type="button" data-lang="en" aria-pressed="false">EN</button>
+        </span>
+      </div>
+    </header>
 
-      <main>
-        <div class="hero">
-          <h1 data-i18n="hero.title">Chụp màn hình, khoanh một chỗ, gửi đi.</h1>
-          <p class="lead" data-i18n="hero.lead">
-            Snapit là tool chụp màn hình kiểu Lightshot cho macOS và Linux. Bấm phím, kéo
-            chọn vùng, vẽ vài nét, ⌘C là dán được ngay vào chat.
-          </p>
-          <div class="actions">
-            <a
-              class="button"
-              href="__REPO_URL__/releases/latest"
-              data-i18n="hero.download"
-              >Tải về</a
-            >
-            <a
-              class="text-link"
-              href="./docs/cai-dat.html"
-              data-href-en="./docs/en/install.html"
-              data-i18n="hero.install"
-              >Xem cách cài</a
-            >
-          </div>
-          <p class="fine" data-i18n="hero.fine">
-            Miễn phí · macOS 13 trở lên · Ubuntu và Linux khác
+    <main>
+      <div class="hero column">
+        <h1>
+          <span data-i18n="hero.line1">Chụp, khoanh,</span>
+          <span data-i18n="hero.line2">dán vào chat.</span>
+        </h1>
+        <p class="hero-sentence" data-i18n="hero.sentence">
+          Snapit là tool chụp màn hình kiểu Lightshot cho Mac và Linux. Bấm một phím, màn
+          hình đứng lại cho bạn khoanh vùng, vẽ vài nét, rồi ⌘C.
+        </p>
+        <div class="actions">
+          <a
+            class="button"
+            href="__REPO_URL__/releases/latest"
+            data-i18n="action.download"
+            >Tải về</a
+          >
+          <a
+            class="text-link"
+            href="./docs/cai-dat.html"
+            data-href-en="./docs/en/install.html"
+            data-i18n="action.install"
+            >Cách cài →</a
+          >
+        </div>
+        <p class="hero-note" data-i18n="hero.note">
+          Miễn phí. macOS 13 trở lên, Ubuntu và Linux khác.
+        </p>
+      </div>
+
+      <figure>
+        <div class="states" id="states">
+          <img
+            src="./images/draw-vi.png"
+            data-src-en="./images/draw-en.png"
+            width="1616"
+            height="980"
+            alt="Snapit trên một trang tài liệu: vùng chọn nét đứt, khung đỏ quanh tên file, mũi tên và ghi chú, thanh công cụ ngay dưới"
+            data-i18n-alt="states.alt"
+          />
+          <img
+            src="./images/frozen-vi.png"
+            data-src-en="./images/frozen-en.png"
+            width="1616"
+            height="980"
+            alt=""
+          />
+          <img
+            src="./images/select-vi.png"
+            data-src-en="./images/select-en.png"
+            width="1616"
+            height="980"
+            alt=""
+          />
+        </div>
+        <figcaption class="states-caption" data-i18n="states.caption">
+          Một lần chụp từ đầu đến cuối: màn hình đứng lại, kéo chọn, vẽ.
+        </figcaption>
+      </figure>
+
+      <section class="column" aria-labelledby="how-title">
+        <h2 id="how-title" data-reveal data-i18n="how.title">Dùng thế nào</h2>
+
+        <ol class="exchanges">
+          <li class="exchange">
+            <h3 data-reveal data-i18n="how.one">Đầu tiên, bấm ⌘⇧2.</h3>
+            <div class="call" data-reveal>
+              <span class="keys"><kbd>⌘</kbd><kbd>⇧</kbd><kbd>2</kbd></span>
+              <span class="call-note" data-i18n="how.one.note"
+                >Trên Linux là PrintScreen.</span
+              >
+            </div>
+            <figure class="response" data-reveal>
+              <img
+                src="./images/frozen-vi.png"
+                data-src-en="./images/frozen-en.png"
+                width="1616"
+                height="980"
+                loading="lazy"
+                alt="Cả màn hình đứng lại và tối đi"
+                data-i18n-alt="how.one.alt"
+              />
+              <figcaption data-i18n="how.one.caption">
+                Màn hình đứng lại và tối đi, chờ bạn kéo.
+              </figcaption>
+            </figure>
+          </li>
+
+          <li class="exchange">
+            <h3 data-reveal data-i18n="how.two">Rồi kéo một vùng, vẽ lên đó.</h3>
+            <div class="call" data-reveal>
+              <img
+                src="./images/toolbar.png"
+                width="1028"
+                height="72"
+                loading="lazy"
+                alt="Thanh công cụ: bút, đường thẳng, mũi tên, khung, bút dạ quang, chữ, 8 màu, undo, copy, lưu, đóng"
+                data-i18n-alt="how.two.toolbar"
+              />
+            </div>
+            <figure class="response" data-reveal>
+              <img
+                src="./images/draw-vi.png"
+                data-src-en="./images/draw-en.png"
+                width="1616"
+                height="980"
+                loading="lazy"
+                alt="Vùng chọn có khung đỏ, mũi tên, bút dạ quang và ghi chú"
+                data-i18n-alt="how.two.alt"
+              />
+              <figcaption data-i18n="how.two.caption">
+                Thanh công cụ nằm ngay dưới vùng chọn. Kéo cạnh để chỉnh lại, ⌘Z nếu lỡ
+                tay.
+              </figcaption>
+            </figure>
+          </li>
+
+          <li class="exchange exchange-final">
+            <h3 data-reveal data-i18n="how.three">Xong thì ⌘C, dán vào đâu cũng được.</h3>
+            <div class="call" data-reveal>
+              <span class="keys"><kbd>⌘</kbd><kbd>C</kbd></span>
+              <span class="call-note" data-i18n="how.three.copy">copy</span>
+              <span class="keys"><kbd>⌘</kbd><kbd>S</kbd></span>
+              <span class="call-note" data-i18n="how.three.save">lưu file</span>
+            </div>
+            <figure class="response" data-reveal>
+              <img
+                src="./images/result-vi.png"
+                data-src-en="./images/result-en.png"
+                width="1456"
+                height="724"
+                loading="lazy"
+                alt="Ảnh Snapit xuất ra: đúng vùng đã chọn, kèm các nét vẽ"
+                data-i18n-alt="how.three.alt"
+              />
+              <figcaption data-i18n="how.three.caption">
+                Đây là ảnh thật Snapit xuất ra: 1456 × 724 pixel, nét đúng như màn hình
+                Retina.
+              </figcaption>
+            </figure>
+          </li>
+        </ol>
+      </section>
+
+      <section class="try" aria-labelledby="try-title">
+        <div class="try-intro">
+          <h2 id="try-title" data-reveal data-i18n="try.title">Bật tắt thử</h2>
+          <p data-reveal data-i18n="try.text">
+            Mỗi nét dưới đây do chính code vẽ của Snapit tạo ra. Tắt bớt xem bức ảnh gọn
+            đi thế nào.
           </p>
         </div>
 
-        <figure class="shot">
-          <img
-            src="./docs/images/draw-vi.png"
-            data-src-en="./docs/images/draw-en.png"
-            width="2400"
-            height="1440"
-            alt="Snapit đang mở: vùng chọn nét đứt, khung đỏ, mũi tên, dòng chữ ghi chú và thanh công cụ"
-            data-i18n-alt="shot.alt"
-          />
-          <figcaption data-i18n="shot.caption">
-            Ảnh thật của Snapit: chọn một vùng, khoanh đỏ, thêm mũi tên với một dòng chữ.
-          </figcaption>
-        </figure>
-
-        <section aria-labelledby="steps-title">
-          <h2 id="steps-title" data-i18n="steps.title">Ba thao tác là xong</h2>
-          <ol class="steps">
-            <li>
-              <h3 data-i18n="steps.one.title">Bấm phím</h3>
-              <p data-i18n="steps.one.text">
-                <kbd>⌘</kbd><kbd>⇧</kbd><kbd>2</kbd> trên Mac, <kbd>PrintScreen</kbd> trên
-                Linux. Màn hình đứng hình ngay.
-              </p>
-            </li>
-            <li>
-              <h3 data-i18n="steps.two.title">Kéo và vẽ</h3>
-              <p data-i18n="steps.two.text">
-                Kéo chọn vùng cần chụp, rồi khoanh, chỉ mũi tên, tô màu hay gõ chữ tuỳ ý.
-              </p>
-            </li>
-            <li>
-              <h3 data-i18n="steps.three.title">Copy rồi dán</h3>
-              <p data-i18n="steps.three.text">
-                <kbd>⌘</kbd><kbd>C</kbd> là ảnh vào clipboard, dán đâu cũng được. Muốn giữ
-                lại thì <kbd>⌘</kbd><kbd>S</kbd>.
-              </p>
-            </li>
-          </ol>
-        </section>
-
-        <section class="features" aria-labelledby="features-title">
-          <div>
-            <h2 id="features-title" data-i18n="features.title">Có đủ những thứ cần</h2>
-            <ul>
-              <li data-i18n="features.tools">
-                Bút, đường thẳng, mũi tên, khung, bút dạ quang, chữ, 8 màu.
-              </li>
-              <li data-i18n="features.sharp">
-                Ảnh ra đúng độ nét của màn hình, Retina là 2×.
-              </li>
-              <li data-i18n="features.hotkey">
-                Không thích phím mặc định? Đổi ngay trong app, khỏi khởi động lại.
-              </li>
-              <li data-i18n="features.tray">
-                Nằm gọn trên menu bar, tự chạy khi mở máy.
-              </li>
-              <li data-i18n="features.undo">
-                Lỡ tay thì ⌘Z. Bấm Cancel lúc lưu thì quay lại, nét vẽ vẫn còn.
-              </li>
-            </ul>
-          </div>
-          <div class="toolbar">
+        <div class="panel" data-reveal>
+          <div class="panel-picture">
             <img
-              src="./docs/images/toolbar.png"
-              width="1028"
-              height="72"
-              alt="Thanh công cụ của Snapit"
-              data-i18n-alt="toolbar.alt"
+              src="./images/select-vi.png"
+              data-src-en="./images/select-en.png"
+              width="1616"
+              height="980"
               loading="lazy"
+              alt="Vùng chọn trên trang tài liệu, chưa vẽ gì"
+              data-i18n-alt="try.alt"
             />
-            <p data-i18n="toolbar.caption">
-              Thanh công cụ hiện ngay dưới vùng chọn, không phải đi tìm.
-            </p>
+            <img
+              src="./images/layer-rect-vi.png"
+              data-src-en="./images/layer-rect-en.png"
+              data-layer="rect"
+              width="1616"
+              height="980"
+              loading="lazy"
+              alt=""
+            />
+            <img
+              src="./images/layer-arrow-vi.png"
+              data-src-en="./images/layer-arrow-en.png"
+              data-layer="arrow"
+              width="1616"
+              height="980"
+              loading="lazy"
+              alt=""
+            />
+            <img
+              src="./images/layer-marker-vi.png"
+              data-src-en="./images/layer-marker-en.png"
+              data-layer="marker"
+              width="1616"
+              height="980"
+              loading="lazy"
+              alt=""
+            />
+            <img
+              src="./images/layer-note-vi.png"
+              data-src-en="./images/layer-note-en.png"
+              data-layer="note"
+              width="1616"
+              height="980"
+              loading="lazy"
+              alt=""
+            />
           </div>
-        </section>
 
-        <section class="closing" aria-labelledby="closing-title">
-          <h2 id="closing-title" data-i18n="closing.title">Thử đi, nhẹ lắm.</h2>
-          <p data-i18n="closing.text">
-            Tải file cho máy bạn ở trang Releases. Cài mất chừng một phút, lần đầu trên
-            Mac nhớ cấp quyền chụp màn hình.
-          </p>
-          <div class="actions">
-            <a
-              class="button"
-              href="__REPO_URL__/releases/latest"
-              data-i18n="hero.download"
-              >Tải về</a
-            >
+          <div class="controls">
+            <label class="control"
+              ><span data-i18n="try.rect">Khung đỏ</span
+              ><input
+                class="switch"
+                type="checkbox"
+                role="switch"
+                data-toggle="rect"
+                checked
+            /></label>
+            <label class="control"
+              ><span data-i18n="try.arrow">Mũi tên</span
+              ><input
+                class="switch"
+                type="checkbox"
+                role="switch"
+                data-toggle="arrow"
+                checked
+            /></label>
+            <label class="control"
+              ><span data-i18n="try.marker">Bút dạ quang</span
+              ><input
+                class="switch"
+                type="checkbox"
+                role="switch"
+                data-toggle="marker"
+                checked
+            /></label>
+            <label class="control"
+              ><span data-i18n="try.note">Ghi chú</span
+              ><input
+                class="switch"
+                type="checkbox"
+                role="switch"
+                data-toggle="note"
+                checked
+            /></label>
+            <div class="control">
+              <span data-i18n="try.size">Ảnh ra</span><output>1456 × 724 px</output>
+            </div>
+            <div class="control">
+              <span data-i18n="try.file">Tên file nếu lưu bây giờ</span
+              ><output id="filename">Snapit_2026-11-18_09-05-07.png</output>
+            </div>
             <a
               class="text-link"
-              href="./docs/"
-              data-href-en="./docs/en/"
-              data-i18n="closing.docs"
-              >Đọc tài liệu</a
+              href="./docs/su-dung.html"
+              data-href-en="./docs/en/usage.html"
+              data-i18n="try.link"
+              >Xem đủ các công cụ →</a
             >
           </div>
-        </section>
-      </main>
+        </div>
+        <p class="try-note" data-reveal data-i18n="try.note2">
+          Tên file theo giờ máy bạn, đúng như Snapit sẽ đặt.
+        </p>
+      </section>
 
-      <footer data-i18n="footer">
-        Snapit, làm cho anh em dùng nội bộ. Mã nguồn để trên GitHub.
-      </footer>
-    </div>
+      <section class="closing column" aria-labelledby="closing-title">
+        <h2 id="closing-title" data-reveal data-i18n="closing.title">
+          Cài mất chừng một phút. Lần đầu trên Mac nhớ cho Snapit quyền chụp màn hình.
+        </h2>
+        <div class="actions" data-reveal>
+          <a
+            class="button"
+            href="__REPO_URL__/releases/latest"
+            data-i18n="action.download"
+            >Tải về</a
+          >
+          <a
+            class="text-link"
+            href="./docs/cai-dat.html"
+            data-href-en="./docs/en/install.html"
+            data-i18n="closing.link"
+            >Hướng dẫn cài từng bước →</a
+          >
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span data-i18n="footer.what">Snapit, chụp màn hình cho Mac và Linux</span>
+      <nav aria-label="Liên kết">
+        <a href="./docs/" data-href-en="./docs/en/" data-i18n="nav.docs">Tài liệu</a>
+        <a
+          href="./docs/loi-thuong-gap.html"
+          data-href-en="./docs/en/troubleshooting.html"
+          data-i18n="footer.help"
+          >Gặp lỗi</a
+        >
+        <a href="__REPO_URL__">GitHub</a>
+      </nav>
+      <span class="year">2026</span>
+    </footer>
 
     <script>
-      // Bản tiếng Anh. Tiếng Việt nằm sẵn trong HTML (chạy được cả khi không có script).
+      // Bản tiếng Anh. Tiếng Việt nằm sẵn trong HTML, nên trang vẫn đọc được khi script không chạy.
       const EN = {
         "nav.docs": "Docs",
-        "hero.title": "Grab the screen, circle the bit, send it.",
-        "hero.lead":
-          "Snapit is a Lightshot-style screenshot tool for macOS and Linux. Press a key, drag a box, scribble a little, hit ⌘C and paste it straight into the chat.",
-        "hero.download": "Download",
-        "hero.install": "How to install",
-        "hero.fine": "Free · macOS 13 or newer · Ubuntu and other Linux",
-        "shot.alt":
-          "Snapit open: dashed selection, a red box, an arrow, a note and the toolbar",
-        "shot.caption":
-          "The real Snapit: pick an area, box it in red, add an arrow and a note.",
-        "steps.title": "Three moves and you're done",
-        "steps.one.title": "Press the key",
-        "steps.one.text":
-          "<kbd>⌘</kbd><kbd>⇧</kbd><kbd>2</kbd> on a Mac, <kbd>PrintScreen</kbd> on Linux. The screen freezes right away.",
-        "steps.two.title": "Drag and draw",
-        "steps.two.text":
-          "Drag over the part you want, then box it, point at it, highlight it or type on it.",
-        "steps.three.title": "Copy and paste",
-        "steps.three.text":
-          "<kbd>⌘</kbd><kbd>C</kbd> puts it on the clipboard, paste it anywhere. Want to keep it? <kbd>⌘</kbd><kbd>S</kbd>.",
-        "features.title": "Everything you actually need",
-        "features.tools": "Pen, line, arrow, box, highlighter, text, 8 colours.",
-        "features.sharp": "Images come out as sharp as your screen, 2× on Retina.",
-        "features.hotkey":
-          "Don't like the default key? Change it in the app, no restart.",
-        "features.tray": "Sits quietly in the menu bar and starts with your computer.",
-        "features.undo":
-          "Slipped? ⌘Z. Cancel the save dialog and you're back, drawings intact.",
-        "toolbar.alt": "Snapit's toolbar",
-        "toolbar.caption":
-          "The toolbar pops up right under your selection, no hunting around.",
-        "closing.title": "Give it a go, it's tiny.",
-        "closing.text":
-          "Grab the file for your machine from the Releases page. Installing takes about a minute; on a Mac, remember to allow screen recording the first time.",
-        "closing.docs": "Read the docs",
-        footer: "Snapit, made for the team. The code lives on GitHub.",
+        "hero.line1": "Grab it, mark it,",
+        "hero.line2": "paste it in chat.",
+        "hero.sentence":
+          "Snapit is a Lightshot-style screenshot tool for Mac and Linux. Press one key, the screen holds still while you box an area, scribble a bit, then ⌘C.",
+        "action.download": "Download",
+        "action.install": "How to install →",
+        "hero.note": "Free. macOS 13 or newer, Ubuntu and other Linux.",
+        "states.alt":
+          "Snapit over a docs page: dashed selection, a red box around a file name, an arrow and a note, toolbar right underneath",
+        "states.caption":
+          "One capture start to finish: the screen holds still, you drag, you draw.",
+        "how.title": "How it goes",
+        "how.one": "First, press ⌘⇧2.",
+        "how.one.note": "On Linux it's PrintScreen.",
+        "how.one.alt": "The whole screen frozen and dimmed",
+        "how.one.caption": "The screen holds still and dims, waiting for you to drag.",
+        "how.two": "Then drag a box and draw on it.",
+        "how.two.toolbar":
+          "Toolbar: pen, line, arrow, box, highlighter, text, 8 colours, undo, copy, save, close",
+        "how.two.alt":
+          "The selection with a red box, an arrow, a highlighter stroke and a note",
+        "how.two.caption":
+          "The toolbar sits right under your selection. Drag an edge to adjust, ⌘Z if you slip.",
+        "how.three": "Done? ⌘C and paste it anywhere.",
+        "how.three.copy": "copy",
+        "how.three.save": "save a file",
+        "how.three.alt":
+          "The image Snapit exported: exactly the selected area, drawings included",
+        "how.three.caption":
+          "This is a real Snapit export: 1456 × 724 pixels, as sharp as the Retina screen it came from.",
+        "try.title": "Flip it on and off",
+        "try.text":
+          "Every stroke here was drawn by Snapit's own drawing code. Switch a few off and see how much cleaner it gets.",
+        "try.alt": "The selection on the docs page, nothing drawn yet",
+        "try.rect": "Red box",
+        "try.arrow": "Arrow",
+        "try.marker": "Highlighter",
+        "try.note": "Note",
+        "try.size": "Image size",
+        "try.file": "File name if you saved now",
+        "try.link": "See all the tools →",
+        "try.note2": "Named after your clock, exactly the way Snapit names it.",
+        "closing.title":
+          "Installing takes about a minute. On a Mac, let Snapit record the screen the first time.",
+        "closing.link": "Step-by-step install →",
+        "footer.what": "Snapit, screenshots for Mac and Linux",
+        "footer.help": "Troubleshooting",
       };
       const STORAGE_KEY = "snapit-lang";
 
-      // Ghi lại bản tiếng Việt gốc để chuyển qua lại.
       const original = new Map();
       for (const element of document.querySelectorAll("[data-i18n]")) {
         original.set(element, element.innerHTML);
@@ -545,6 +944,59 @@
         button.addEventListener("click", () => applyLanguage(button.dataset.lang));
       }
       applyLanguage(initialLanguage());
+
+      // ── Bật tắt từng nét ──
+      for (const toggle of document.querySelectorAll("[data-toggle]")) {
+        const layer = document.querySelector(`[data-layer="${toggle.dataset.toggle}"]`);
+        toggle.addEventListener("change", () => (layer.hidden = !toggle.checked));
+      }
+
+      // ── Tên file theo giờ máy, giống hệt cách Snapit đặt ──
+      const pad = (value) => String(value).padStart(2, "0");
+      const filename = document.getElementById("filename");
+      function tick() {
+        const now = new Date();
+        const date = [
+          now.getFullYear(),
+          pad(now.getMonth() + 1),
+          pad(now.getDate()),
+        ].join("-");
+        const time = [
+          pad(now.getHours()),
+          pad(now.getMinutes()),
+          pad(now.getSeconds()),
+        ].join("-");
+        filename.textContent = `Snapit_${date}_${time}.png`;
+      }
+      tick();
+      setInterval(tick, 1000);
+
+      // ── Ô minh hoạ đứng yên khi tab bị ẩn ──
+      const states = document.getElementById("states");
+      document.addEventListener("visibilitychange", () =>
+        states.classList.toggle("is-paused", document.hidden),
+      );
+
+      // ── Hiện dần khi cuộn tới ──
+      if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        document.documentElement.classList.add("can-reveal");
+        const observer = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (!entry.isIntersecting) continue;
+              entry.target.classList.add("is-in");
+              observer.unobserve(entry.target);
+            }
+          },
+          { threshold: 0.15 },
+        );
+        for (const section of document.querySelectorAll("section")) {
+          section.querySelectorAll("[data-reveal]").forEach((element, order) => {
+            element.style.setProperty("--order", String(order));
+            observer.observe(element);
+          });
+        }
+      }
     </script>
   </body>
 </html>

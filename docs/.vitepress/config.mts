@@ -3,7 +3,9 @@ import { defineConfig, type DefaultTheme } from "vitepress";
 // Workflow GitHub Pages điền các biến này (xem .github/workflows/pages.yml).
 // Chạy local thì để trống: tài liệu nằm ở gốc, không có link ra ngoài.
 const DOCS_BASE = process.env.DOCS_BASE ?? "/";
-const SITE_URL = process.env.SITE_URL; // trang giới thiệu (web/index.html)
+const SITE_URL = process.env.SITE_URL; // trang giới thiệu (web/index.html), địa chỉ đầy đủ
+/** Đường dẫn trang giới thiệu khi chưa có SITE_URL: thư mục cha của tài liệu. */
+const SITE_ROOT = SITE_URL ?? DOCS_BASE.replace(/docs\/$/, "");
 const REPO_URL = process.env.REPO_URL;
 
 /** Chữ hiển thị của một ngôn ngữ. Đường dẫn trang giống nhau, chỉ khác tiền tố. */
@@ -81,9 +83,13 @@ const PAGE = {
 
 function theme(copy: Copy, language: "vi" | "en"): DefaultTheme.Config {
   const link = (page: keyof typeof PAGE) => `${copy.prefix}${PAGE[page][language]}`;
-  const introLink = SITE_URL && (language === "en" ? `${SITE_URL}?lang=en` : SITE_URL);
+  const home = language === "en" ? `${SITE_ROOT}?lang=en` : SITE_ROOT;
+  // menu chỉ nhận link ngoài khi là địa chỉ đầy đủ; đường dẫn tương đối sẽ bị gắn thêm /docs/
+  const introLink = SITE_URL ? home : undefined;
 
   return {
+    // bấm "Snapit" góc trái là về trang giới thiệu
+    logoLink: { link: home, target: "_self" },
     nav: [
       ...(introLink ? [{ text: copy.intro, link: introLink, target: "_self" }] : []),
       { text: copy.install, link: link("install") },

@@ -1,0 +1,1417 @@
+{
+ "url": "http://localhost:4173/",
+ "at": "2026-11-18T07:29:59.617Z",
+ "allow": [],
+ "viewports": [
+  {
+   "width": 1440,
+   "height": 900,
+   "load": "load",
+   "screens": 6,
+   "filled": [
+    0.21,
+    0.38,
+    0.34,
+    0.34,
+    0.8,
+    0.33
+   ],
+   "motion": {
+    "elements": 19,
+    "css": 3,
+    "transitions": 16,
+    "scripted": 0,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "page": {
+     "height": 4983,
+     "screens": 5.5,
+     "words": 236,
+     "img": 12,
+     "video": 0,
+     "canvas": 0,
+     "svg": 1,
+     "sections": 3,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 0,
+     "uiAbuse": false,
+     "realPictures": 11,
+     "videoCount": 0,
+     "uiPictures": 0,
+     "pictureSamples": [
+      "draw-en.png",
+      "frozen-en.png",
+      "select-en.png",
+      "frozen-en.png",
+      "draw-en.png",
+      "result-en.png",
+      "select-en.png",
+      "layer-rect-en.png"
+     ],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "Grab it, mark it, paste it in chat.",
+     "words": 8,
+     "chars": 35,
+     "lines": 2,
+     "size": 96,
+     "vw": 6.7,
+     "font": "Familjen Grotesk",
+     "weight": 500,
+     "tracking": -0.035,
+     "leading": 0.98,
+     "upper": false,
+     "italic": false,
+     "mono": false,
+     "align": "left",
+     "position": "center",
+     "widthRatio": 0.42,
+     "top": 238,
+     "tag": "h1",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "Grab it, mark it, paste it in chat.",
+     "words": 8,
+     "lines": 2,
+     "size": 96,
+     "font": "Familjen Grotesk"
+    },
+    "headings": [
+     {
+      "text": "Grab it, mark it, paste it in chat.",
+      "words": 8,
+      "chars": 35,
+      "lines": 2,
+      "size": 96,
+      "vw": 6.7,
+      "font": "Familjen Grotesk",
+      "weight": 500,
+      "tracking": -0.035,
+      "leading": 0.98,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.42,
+      "top": 238,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "How it goes",
+      "words": 3,
+      "chars": 11,
+      "lines": 1,
+      "size": 40,
+      "vw": 2.8,
+      "font": "Familjen Grotesk",
+      "weight": 500,
+      "tracking": -0.02,
+      "leading": 1.1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.42,
+      "top": 1522,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Flip it on and off",
+      "words": 5,
+      "chars": 18,
+      "lines": 1,
+      "size": 40,
+      "vw": 2.8,
+      "font": "Familjen Grotesk",
+      "weight": 500,
+      "tracking": -0.02,
+      "leading": 1.1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.67,
+      "top": 3603,
+      "tag": "h2",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 3,
+     "maxLines": 2,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 0,
+     "medianWords": 5,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Familjen Grotesk",
+       "share": 1,
+       "mono": false
+      }
+     ],
+     "familyCount": 1,
+     "sizes": [
+      17,
+      19,
+      24,
+      40,
+      96
+     ],
+     "sizeCount": 5,
+     "notLoaded": [],
+     "body": {
+      "font": "Familjen Grotesk",
+      "size": 17,
+      "leading": 1.5,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 14.3
+     },
+     "measureChars": 50,
+     "max": {
+      "size": 96,
+      "vw": 6.7,
+      "font": "Familjen Grotesk",
+      "text": "Grab it, mark it,"
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0,
+     "centerShare": 0,
+     "smallText": 0
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#f7f7f5",
+     "bodyBgHsl": {
+      "h": 60,
+      "s": 0.11,
+      "l": 0.96
+     },
+     "dark": false,
+     "sectionBgs": [
+      {
+       "color": "#f6e016",
+       "top": 3459,
+       "hsl": {
+        "h": 54,
+        "s": 0.93,
+        "l": 0.53
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#0d2a1c",
+       "share": 0.92
+      },
+      {
+       "color": "#55625b",
+       "share": 0.08
+      }
+     ],
+     "button": {
+      "bg": "#f6e016",
+      "hsl": {
+       "h": 54,
+       "s": 0.93,
+       "l": 0.53
+      },
+      "fg": "#0d2a1c"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 2,
+     "inHero": 1,
+     "radius": 4,
+     "height": 48,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Download"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 0,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 0,
+     "hairlineSamples": [],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 1,
+     "boxRadius": 12,
+     "squareMedia": 0,
+     "roundedMedia": 11,
+     "mediaRadius": 4,
+     "textShadow": 0,
+     "cardRows": []
+    },
+    "heroMedia": [
+     {
+      "type": "img",
+      "ratio": 0.11
+     },
+     {
+      "type": "img",
+      "ratio": 0.11
+     },
+     {
+      "type": "img",
+      "ratio": 0.11
+     }
+    ],
+    "nav": {
+     "links": 2,
+     "fixed": false,
+     "height": 76,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "familjen grotesk"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "pageH": 4983,
+    "margins": {
+     "left": 240,
+     "right": 240
+    },
+    "sections": [
+     {
+      "sel": "figure",
+      "tag": "figure",
+      "top": 756,
+      "height": 622,
+      "words": 13,
+      "media": 1,
+      "middle": 0,
+      "heading": null,
+      "left": 240,
+      "right": 240,
+      "textLeft": 240,
+      "textRight": 718,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section.try",
+      "tag": "section",
+      "top": 3459,
+      "height": 871,
+      "words": 57,
+      "media": 5,
+      "middle": 63,
+      "heading": {
+       "text": "Flip it on and off",
+       "size": 40,
+       "tag": "h2"
+      },
+      "left": 240,
+      "right": 260,
+      "textLeft": 240,
+      "textRight": 260,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [
+     {
+      "top": 3316,
+      "height": 280
+     },
+     {
+      "top": 4184,
+      "height": 416
+     }
+    ],
+    "h1s": [
+     {
+      "text": "Grab it, mark it, paste it in chat.",
+      "size": 96,
+      "top": 238,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 420,
+      "n": 5
+     },
+     {
+      "x": 240,
+      "n": 2
+     }
+    ],
+    "leftBlocks": 7,
+    "bodySize": 17,
+    "stage": false,
+    "explains": true,
+    "slivers": [],
+    "voidShare": 0.19,
+    "voidBox": {
+     "x": 0,
+     "y": 120,
+     "w": 420,
+     "h": 600
+    }
+   },
+   "app": null,
+   "consoleErrors": []
+  },
+  {
+   "width": 768,
+   "height": 1024,
+   "load": "load",
+   "screens": 5,
+   "filled": [
+    0.43,
+    0.51,
+    0.57,
+    0.71,
+    0.35
+   ],
+   "motion": {
+    "elements": 19,
+    "css": 3,
+    "transitions": 16,
+    "scripted": 0,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "page": {
+     "height": 4655,
+     "screens": 4.5,
+     "words": 236,
+     "img": 12,
+     "video": 0,
+     "canvas": 0,
+     "svg": 1,
+     "sections": 3,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 0,
+     "uiAbuse": false,
+     "realPictures": 11,
+     "videoCount": 0,
+     "uiPictures": 0,
+     "pictureSamples": [
+      "draw-en.png",
+      "frozen-en.png",
+      "select-en.png",
+      "frozen-en.png",
+      "draw-en.png",
+      "result-en.png",
+      "select-en.png",
+      "layer-rect-en.png"
+     ],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "Grab it, mark it, paste it in chat.",
+     "words": 8,
+     "chars": 35,
+     "lines": 2,
+     "size": 62.2,
+     "vw": 8.1,
+     "font": "Familjen Grotesk",
+     "weight": 500,
+     "tracking": -0.035,
+     "leading": 0.98,
+     "upper": false,
+     "italic": false,
+     "mono": false,
+     "align": "left",
+     "position": "center",
+     "widthRatio": 0.78,
+     "top": 258,
+     "tag": "h1",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "Grab it, mark it, paste it in chat.",
+     "words": 8,
+     "lines": 2,
+     "size": 62.2,
+     "font": "Familjen Grotesk"
+    },
+    "headings": [
+     {
+      "text": "Grab it, mark it, paste it in chat.",
+      "words": 8,
+      "chars": 35,
+      "lines": 2,
+      "size": 62.2,
+      "vw": 8.1,
+      "font": "Familjen Grotesk",
+      "weight": 500,
+      "tracking": -0.035,
+      "leading": 0.98,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.78,
+      "top": 258,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "How it goes",
+      "words": 3,
+      "chars": 11,
+      "lines": 1,
+      "size": 33.2,
+      "vw": 4.3,
+      "font": "Familjen Grotesk",
+      "weight": 500,
+      "tracking": -0.02,
+      "leading": 1.1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.78,
+      "top": 1280,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Flip it on and off",
+      "words": 5,
+      "chars": 18,
+      "lines": 1,
+      "size": 33.2,
+      "vw": 4.3,
+      "font": "Familjen Grotesk",
+      "weight": 500,
+      "tracking": -0.02,
+      "leading": 1.1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.94,
+      "top": 3262,
+      "tag": "h2",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 3,
+     "maxLines": 2,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 0,
+     "medianWords": 5,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Familjen Grotesk",
+       "share": 1,
+       "mono": false
+      }
+     ],
+     "familyCount": 1,
+     "sizes": [
+      16,
+      18,
+      22,
+      33,
+      62
+     ],
+     "sizeCount": 5,
+     "notLoaded": [],
+     "body": {
+      "font": "Familjen Grotesk",
+      "size": 16.3,
+      "leading": 1.5,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 14.3
+     },
+     "measureChars": 52,
+     "max": {
+      "size": 62.2,
+      "vw": 8.1,
+      "font": "Familjen Grotesk",
+      "text": "Grab it, mark it,"
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0,
+     "centerShare": 0,
+     "smallText": 0
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#f7f7f5",
+     "bodyBgHsl": {
+      "h": 60,
+      "s": 0.11,
+      "l": 0.96
+     },
+     "dark": false,
+     "sectionBgs": [
+      {
+       "color": "#f6e016",
+       "top": 3158,
+       "hsl": {
+        "h": 54,
+        "s": 0.93,
+        "l": 0.53
+       }
+      },
+      {
+       "color": "#f7f7f5",
+       "top": 3416,
+       "hsl": {
+        "h": 60,
+        "s": 0.11,
+        "l": 0.96
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#0d2a1c",
+       "share": 0.92
+      },
+      {
+       "color": "#55625b",
+       "share": 0.08
+      }
+     ],
+     "button": {
+      "bg": "#f6e016",
+      "hsl": {
+       "h": 54,
+       "s": 0.93,
+       "l": 0.53
+      },
+      "fg": "#0d2a1c"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 2,
+     "inHero": 1,
+     "radius": 4,
+     "height": 48,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Download"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 0,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 0,
+     "hairlineSamples": [],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 1,
+     "boxRadius": 12,
+     "squareMedia": 0,
+     "roundedMedia": 11,
+     "mediaRadius": 4,
+     "textShadow": 0,
+     "cardRows": []
+    },
+    "heroMedia": [
+     {
+      "type": "img",
+      "ratio": 0.3
+     },
+     {
+      "type": "img",
+      "ratio": 0.3
+     },
+     {
+      "type": "img",
+      "ratio": 0.3
+     }
+    ],
+    "nav": {
+     "links": 2,
+     "fixed": false,
+     "height": 73,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "familjen grotesk"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "pageH": 4655,
+    "margins": {
+     "left": 24,
+     "right": 24
+    },
+    "sections": [
+     {
+      "sel": "div.hero.column",
+      "tag": "div",
+      "top": 73,
+      "height": 556,
+      "words": 46,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Grab it, mark it,",
+       "size": 62,
+       "tag": "h1"
+      },
+      "left": 84,
+      "right": 121,
+      "textLeft": 84,
+      "textRight": 121,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "figure",
+      "tag": "figure",
+      "top": 701,
+      "height": 475,
+      "words": 13,
+      "media": 2,
+      "middle": 0,
+      "heading": null,
+      "left": 24,
+      "right": 24,
+      "textLeft": 24,
+      "textRight": 281,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section.column",
+      "tag": "section",
+      "top": 1176,
+      "height": 1877,
+      "words": 72,
+      "media": 3,
+      "middle": 0,
+      "heading": {
+       "text": "How it goes",
+       "size": 33,
+       "tag": "h2"
+      },
+      "left": 84,
+      "right": 84,
+      "textLeft": 84,
+      "textRight": 113,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section.try",
+      "tag": "section",
+      "top": 3158,
+      "height": 796,
+      "words": 57,
+      "media": 5,
+      "middle": 0,
+      "heading": {
+       "text": "Flip it on and off",
+       "size": 33,
+       "tag": "h2"
+      },
+      "left": 24,
+      "right": 44,
+      "textLeft": 24,
+      "textRight": 44,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section.closing.column",
+      "tag": "section",
+      "top": 3954,
+      "height": 622,
+      "words": 20,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Installing takes about a minute. On a Mac, let Sna",
+       "size": 22,
+       "tag": "h2"
+      },
+      "left": 84,
+      "right": 284,
+      "textLeft": 84,
+      "textRight": 284,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [
+     {
+      "top": 3848,
+      "height": 384
+     }
+    ],
+    "h1s": [
+     {
+      "text": "Grab it, mark it, paste it in chat.",
+      "size": 62,
+      "top": 258,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 84,
+      "n": 5
+     },
+     {
+      "x": 24,
+      "n": 2
+     }
+    ],
+    "leftBlocks": 7,
+    "bodySize": 16,
+    "stage": false,
+    "explains": true,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": null,
+   "consoleErrors": []
+  },
+  {
+   "width": 390,
+   "height": 844,
+   "load": "load",
+   "screens": 6,
+   "filled": [
+    0.61,
+    0.54,
+    0.72,
+    0.79,
+    0.39,
+    0.31
+   ],
+   "motion": {
+    "elements": 19,
+    "css": 3,
+    "transitions": 16,
+    "scripted": 0,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "page": {
+     "height": 4367,
+     "screens": 5.2,
+     "words": 235,
+     "img": 12,
+     "video": 0,
+     "canvas": 0,
+     "svg": 1,
+     "sections": 3,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 0,
+     "uiAbuse": false,
+     "realPictures": 11,
+     "videoCount": 0,
+     "uiPictures": 0,
+     "pictureSamples": [
+      "draw-en.png",
+      "frozen-en.png",
+      "select-en.png",
+      "frozen-en.png",
+      "draw-en.png",
+      "result-en.png",
+      "select-en.png",
+      "layer-rect-en.png"
+     ],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "Grab it, mark it, paste it in chat.",
+     "words": 8,
+     "chars": 35,
+     "lines": 2,
+     "size": 44,
+     "vw": 11.3,
+     "font": "Familjen Grotesk",
+     "weight": 500,
+     "tracking": -0.035,
+     "leading": 0.98,
+     "upper": false,
+     "italic": false,
+     "mono": false,
+     "align": "left",
+     "position": "center",
+     "widthRatio": 0.9,
+     "top": 244,
+     "tag": "h1",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "Grab it, mark it, paste it in chat.",
+     "words": 8,
+     "lines": 2,
+     "size": 44,
+     "font": "Familjen Grotesk"
+    },
+    "headings": [
+     {
+      "text": "Grab it, mark it, paste it in chat.",
+      "words": 8,
+      "chars": 35,
+      "lines": 2,
+      "size": 44,
+      "vw": 11.3,
+      "font": "Familjen Grotesk",
+      "weight": 500,
+      "tracking": -0.035,
+      "leading": 0.98,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.9,
+      "top": 244,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "How it goes",
+      "words": 3,
+      "chars": 11,
+      "lines": 1,
+      "size": 28,
+      "vw": 7.2,
+      "font": "Familjen Grotesk",
+      "weight": 500,
+      "tracking": -0.02,
+      "leading": 1.1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.9,
+      "top": 1024,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Flip it on and off",
+      "words": 5,
+      "chars": 18,
+      "lines": 1,
+      "size": 28,
+      "vw": 7.2,
+      "font": "Familjen Grotesk",
+      "weight": 500,
+      "tracking": -0.02,
+      "leading": 1.1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.9,
+      "top": 2734,
+      "tag": "h2",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 3,
+     "maxLines": 2,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 0,
+     "medianWords": 5,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Familjen Grotesk",
+       "share": 1,
+       "mono": false
+      }
+     ],
+     "familyCount": 1,
+     "sizes": [
+      16,
+      17,
+      20,
+      28,
+      44
+     ],
+     "sizeCount": 5,
+     "notLoaded": [],
+     "body": {
+      "font": "Familjen Grotesk",
+      "size": 16,
+      "leading": 1.5,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 14.3
+     },
+     "measureChars": 35,
+     "max": {
+      "size": 44,
+      "vw": 11.3,
+      "font": "Familjen Grotesk",
+      "text": "Grab it, mark it,"
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0,
+     "centerShare": 0,
+     "smallText": 0
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#f7f7f5",
+     "bodyBgHsl": {
+      "h": 60,
+      "s": 0.11,
+      "l": 0.96
+     },
+     "dark": false,
+     "sectionBgs": [
+      {
+       "color": "#f6e016",
+       "top": 2630,
+       "hsl": {
+        "h": 54,
+        "s": 0.93,
+        "l": 0.53
+       }
+      },
+      {
+       "color": "#f7f7f5",
+       "top": 2905,
+       "hsl": {
+        "h": 60,
+        "s": 0.11,
+        "l": 0.96
+       }
+      },
+      {
+       "color": "#ebebe8",
+       "top": 3127,
+       "hsl": {
+        "h": 60,
+        "s": 0.07,
+        "l": 0.92
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#0d2a1c",
+       "share": 0.92
+      },
+      {
+       "color": "#55625b",
+       "share": 0.08
+      }
+     ],
+     "button": {
+      "bg": "#f6e016",
+      "hsl": {
+       "h": 54,
+       "s": 0.93,
+       "l": 0.53
+      },
+      "fg": "#0d2a1c"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 2,
+     "inHero": 1,
+     "radius": 4,
+     "height": 48,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Download"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 0,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 0,
+     "hairlineSamples": [],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 1,
+     "boxRadius": 12,
+     "squareMedia": 0,
+     "roundedMedia": 11,
+     "mediaRadius": 4,
+     "textShadow": 0,
+     "cardRows": []
+    },
+    "heroMedia": [
+     {
+      "type": "img",
+      "ratio": 0.21
+     },
+     {
+      "type": "img",
+      "ratio": 0.21
+     },
+     {
+      "type": "img",
+      "ratio": 0.21
+     }
+    ],
+    "nav": {
+     "links": 1,
+     "fixed": false,
+     "height": 58,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "familjen grotesk"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "pageH": 4367,
+    "margins": {
+     "left": 20,
+     "right": 20
+    },
+    "sections": [
+     {
+      "sel": "div.hero.column",
+      "tag": "div",
+      "top": 58,
+      "height": 540,
+      "words": 46,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Grab it, mark it,",
+       "size": 44,
+       "tag": "h1"
+      },
+      "left": 20,
+      "right": 23,
+      "textLeft": 20,
+      "textRight": 23,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "figure",
+      "tag": "figure",
+      "top": 646,
+      "height": 274,
+      "words": 13,
+      "media": 1,
+      "middle": 0,
+      "heading": null,
+      "left": 20,
+      "right": 20,
+      "textLeft": 20,
+      "textRight": 22,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section.column",
+      "tag": "section",
+      "top": 920,
+      "height": 1606,
+      "words": 72,
+      "media": 3,
+      "middle": 0,
+      "heading": {
+       "text": "How it goes",
+       "size": 28,
+       "tag": "h2"
+      },
+      "left": 20,
+      "right": 20,
+      "textLeft": 20,
+      "textRight": 31,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section.try",
+      "tag": "section",
+      "top": 2630,
+      "height": 1033,
+      "words": 57,
+      "media": 5,
+      "middle": 0,
+      "heading": {
+       "text": "Flip it on and off",
+       "size": 28,
+       "tag": "h2"
+      },
+      "left": 20,
+      "right": 32,
+      "textLeft": 20,
+      "textRight": 40,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section.closing.column",
+      "tag": "section",
+      "top": 3663,
+      "height": 586,
+      "words": 20,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Installing takes about a minute. On a Mac, let Sna",
+       "size": 20,
+       "tag": "h2"
+      },
+      "left": 20,
+      "right": 55,
+      "textLeft": 20,
+      "textRight": 55,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [
+     {
+      "top": 3560,
+      "height": 356
+     }
+    ],
+    "h1s": [
+     {
+      "text": "Grab it, mark it, paste it in chat.",
+      "size": 44,
+      "top": 244,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 20,
+      "n": 7
+     }
+    ],
+    "leftBlocks": 7,
+    "bodySize": 16,
+    "stage": false,
+    "explains": true,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": null,
+   "consoleErrors": []
+  }
+ ],
+ "findings": [
+  {
+   "level": "WARN",
+   "id": "no-footage",
+   "width": 1440,
+   "message": "No video anywhere on the page.",
+   "fix": "Look for one honest clip with scripts/assets.mjs --video (the place, the material, the process) and use it as a muted loop with a poster frame. Defend its absence only if no clip fits the subject."
+  },
+  {
+   "level": "WARN",
+   "id": "font-not-dealt",
+   "width": 1440,
+   "message": "The sheet dealt Clash Grotesk and Clash Grotesk, but the page renders Familjen Grotesk.",
+   "fix": "Load the dealt face (the link on the sheet) and put it first in font-family. A build that falls back to a default face lands on the default look."
+  },
+  {
+   "level": "WARN",
+   "id": "blank-gap",
+   "width": 1440,
+   "message": "A 416px stretch at 4184px holds nothing.",
+   "fix": "Check that it is a deliberate rest (once per page at most); otherwise close it to the normal section gap.",
+   "alsoAt": [
+    390
+   ]
+  }
+ ],
+ "images": [
+  {
+   "viewport": "desktop",
+   "width": 1440,
+   "fold": "/Users/vu.nguyen/Root Workspace - Vu nguyen/Vietlink/snapit/.taste-skill/inspect/desktop-fold.jpg",
+   "pages": [
+    "/Users/vu.nguyen/Root Workspace - Vu nguyen/Vietlink/snapit/.taste-skill/inspect/desktop-page-01.jpg",
+    "/Users/vu.nguyen/Root Workspace - Vu nguyen/Vietlink/snapit/.taste-skill/inspect/desktop-page-02.jpg"
+   ],
+   "film": []
+  },
+  {
+   "viewport": "tablet",
+   "width": 768,
+   "fold": "/Users/vu.nguyen/Root Workspace - Vu nguyen/Vietlink/snapit/.taste-skill/inspect/tablet-fold.jpg",
+   "pages": [
+    "/Users/vu.nguyen/Root Workspace - Vu nguyen/Vietlink/snapit/.taste-skill/inspect/tablet-page-01.jpg"
+   ],
+   "film": []
+  },
+  {
+   "viewport": "mobile",
+   "width": 390,
+   "fold": "/Users/vu.nguyen/Root Workspace - Vu nguyen/Vietlink/snapit/.taste-skill/inspect/mobile-fold.jpg",
+   "pages": [
+    "/Users/vu.nguyen/Root Workspace - Vu nguyen/Vietlink/snapit/.taste-skill/inspect/mobile-page-01.jpg"
+   ],
+   "film": []
+  }
+ ]
+}
