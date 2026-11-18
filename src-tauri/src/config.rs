@@ -50,6 +50,13 @@ pub fn save(dir: &Path, c: &Config) -> io::Result<()> {
     std::fs::write(file_path(dir), serde_json::to_string_pretty(c)?)
 }
 
+/// The config to save after the user picked a new hotkey. A broken file gets replaced, but the
+/// replacement must not look like a first launch (that would turn autostart back on).
+pub fn with_hotkey(loaded: Result<Config, String>, hotkey: &str) -> Config {
+    let base = loaded.unwrap_or(Config { autostart_initialized: true, ..Config::default() });
+    Config { hotkey: hotkey.into(), ..base }
+}
+
 pub fn is_wayland(session_type: Option<&str>) -> bool {
     session_type == Some(WAYLAND)
 }
@@ -98,6 +105,21 @@ mod tests {
         save(&d, &Config { hotkey: "F1".into(), autostart_initialized: true }).unwrap();
         let c = load(&d).unwrap();
         assert_eq!(c.hotkey, "F1");
+        assert!(c.autostart_initialized);
+    }
+
+    #[test]
+    fn with_hotkey_keeps_other_settings() {
+        let c = with_hotkey(Ok(Config { hotkey: "F1".into(), autostart_initialized: false }), "F2");
+        assert_eq!(c.hotkey, "F2");
+        assert!(!c.autostart_initialized);
+    }
+
+    #[test]
+    fn with_hotkey_on_broken_file_does_not_retrigger_first_launch() {
+        // the broken file gets replaced; it must not look like a first launch (that re-enables autostart)
+        let c = with_hotkey(Err("bad".into()), "F2");
+        assert_eq!(c.hotkey, "F2");
         assert!(c.autostart_initialized);
     }
 

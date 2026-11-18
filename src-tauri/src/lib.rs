@@ -7,6 +7,7 @@ mod dialog;
 mod hotkey;
 mod output;
 mod overlay;
+mod settings;
 mod tray;
 
 use capture::{CaptureGuard, Shots};
@@ -38,9 +39,16 @@ pub fn run() {
         .on_window_event(|window, event| {
             if let WindowEvent::Destroyed = event {
                 overlay::on_window_destroyed(window.app_handle(), window.label());
+                settings::on_window_destroyed(window.app_handle(), window.label());
             }
         })
-        .invoke_handler(tauri::generate_handler![overlay::close_overlays, output::copy_png, output::save_png])
+        .invoke_handler(tauri::generate_handler![
+            overlay::close_overlays,
+            output::copy_png,
+            output::save_png,
+            hotkey::hotkey_info,
+            hotkey::set_hotkey
+        ])
         .setup(|app| {
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory); // tray only, no Dock icon
@@ -58,7 +66,7 @@ pub fn run() {
                 }
             };
             tray::build(app.handle())?;
-            hotkey::register(app.handle(), &cfg.hotkey, &cfg_dir)?;
+            hotkey::init(app.handle(), &cfg.hotkey, &cfg_dir)?;
 
             if wants_capture(&std::env::args().collect::<Vec<_>>()) {
                 capture::trigger(app.handle());

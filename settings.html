@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Snapit – Capture hotkey</title>
+    <link rel="stylesheet" href="/src/settings.css" />
+    <script type="module" src="/src/settings.ts"></script>
+  </head>
+  <body>
+    <main>
+      <section id="record" hidden>
+        <label for="recorder">Capture hotkey</label>
+        <button id="recorder" type="button" aria-describedby="status"></button>
+        <p id="status" role="status"></p>
+        <div class="actions">
+          <button id="cancel" type="button">Cancel</button>
+          <button id="save" type="button" class="primary" disabled>Save</button>
+        </div>
+      </section>
+      <section id="wayland" hidden>
+        <h1>Capture hotkey</h1>
+        <p>This desktop (Wayland) doesn't let apps set global shortcuts. Add one yourself:</p>
+        <ol>
+          <li>Settings → Keyboard → View and Customize Shortcuts → Custom Shortcuts → <b>+</b></li>
+          <li>Command: <code>snapit --capture</code></li>
+          <li>Pick any key, e.g. <kbd>Print</kbd> (remove GNOME's own binding for it first).</li>
+        </ol>
+        <div class="actions"><button id="close" type="button" class="primary">Close</button></div>
+      </section>
+    </main>
+  </body>
+</html>

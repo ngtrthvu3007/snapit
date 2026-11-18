@@ -70,3 +70,14 @@ macOS `.dmg` built on the company Mac: `src-tauri/target/release/bundle/dmg/Snap
 - [ ] Tray → Capture: the closing tray menu isn't in the screenshot.
 - [ ] macOS: ⌘H / ⌘Q while an overlay is focused — note what happens.
 - [ ] Release build first launched from the mounted DMG, then copied to Applications and relaunched → login item points to /Applications.
+
+## Change hotkey…
+
+Verified in the browser (dev/settings-preview.html, mocked IPC): letter alone rejected, taken key → red error, pick + Save stores the new key, Wayland view shows instructions and fits 400×280.
+
+- [ ] Tray → Change hotkey… opens the window in front (Mac: also when another app is active).
+- [ ] While it's open, pressing the current hotkey does not capture.
+- [ ] Save → new key captures immediately, old one does nothing; survives restart (config.json updated).
+- [ ] Cancel / close the window → old key works again.
+- [ ] A key taken by another app (e.g. one Spotlight uses) → error, old key still works after closing.
+- [ ] **Ubuntu Wayland:** the window shows the GNOME instructions.

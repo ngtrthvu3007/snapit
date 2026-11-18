@@ -38,7 +38,7 @@ On X11 the built-in hotkey (PrintScreen) works without this.
 | Undo last drawing | ⌘Z | Ctrl+Z |
 | Cancel | Esc | Esc |
 
-You can also click **Capture** in the tray / menu bar icon.
+You can also click **Capture** in the tray / menu bar icon. To pick another capture key, use **Change hotkey…** in the same menu: press the new combination, then Save (it works immediately).
 
 Drag to select a region, then drag its edges or inside it to adjust. Pick a tool from the toolbar (pen, line, arrow, rectangle, marker, text) and a color, then draw inside the selection. Once something is drawn, clicking outside no longer starts a new selection. Press Esc to start over.
 
@@ -60,7 +60,7 @@ Snapit starts at login. Turn this off with **Start at login** in the tray menu.
 }
 ```
 
-`hotkey` uses names like `F12`, `PrintScreen`, `CommandOrControl+Shift+S`. Restart Snapit after editing. If the key is already taken, Snapit shows an error at startup. If the file has a typo, Snapit says so at startup, uses defaults for that run and leaves your file alone.
+The tray's **Change hotkey…** writes `hotkey` for you. By hand, it uses names like `F12`, `PrintScreen`, `CommandOrControl+Shift+S`. Restart Snapit after editing. If the key is already taken, Snapit shows an error at startup. If the file has a typo, Snapit says so at startup, uses defaults for that run and leaves your file alone.
 
 ## Known limitations
 
