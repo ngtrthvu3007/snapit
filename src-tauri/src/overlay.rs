@@ -5,7 +5,7 @@ use tauri::{
     http::{Request, Response, StatusCode, header},
 };
 
-use crate::capture::{CaptureGuard, Shots};
+use crate::capture::{CaptureGuard, Shot, Shots};
 
 /// Nhãn overlay: `overlay-<lần chụp>-<số màn hình>`; trang web đọc số màn hình ở đoạn cuối.
 /// Số lần chụp giúp sự kiện "destroyed" đến muộn của lần trước không bị nhầm với lần hiện tại.
@@ -23,7 +23,10 @@ fn is_overlay(label: &str) -> bool {
 }
 
 fn overlay_windows(app: &AppHandle) -> impl Iterator<Item = WebviewWindow> {
-    app.webview_windows().into_iter().filter(|(label, _)| is_overlay(label)).map(|(_, window)| window)
+    app.webview_windows()
+        .into_iter()
+        .filter(|(label, _)| is_overlay(label))
+        .map(|(_, window)| window)
 }
 
 /// Mỗi màn hình một overlay không viền, ẩn sẵn; trang tự hiện khi đã tải xong ảnh.
@@ -31,28 +34,42 @@ fn overlay_windows(app: &AppHandle) -> impl Iterator<Item = WebviewWindow> {
 pub fn open_overlays(app: &AppHandle) -> tauri::Result<()> {
     let capture = CAPTURE_NUMBER.fetch_add(1, Ordering::Relaxed);
     let shots = app.state::<Shots>();
+
     for (index, shot) in shots.lock().iter().enumerate() {
         let label = format!("{LABEL_PREFIX}{capture}-{index}");
-        let builder = WebviewWindowBuilder::new(app, label, WebviewUrl::App(PAGE.into()))
-            .decorations(false)
-            .always_on_top(true)
-            .skip_taskbar(true)
-            .resizable(false)
-            .shadow(false)
-            .visible_on_all_workspaces(true)
-            // nhiều màn hình: cú kéo đầu tiên trên overlay chưa focus không bị nuốt
-            .accept_first_mouse(true)
-            .position(f64::from(shot.x), f64::from(shot.y))
-            .inner_size(f64::from(shot.width), f64::from(shot.height))
-            .visible(false);
-        // Wayland bỏ qua position; fullscreen đặt trên builder sẽ nhắm đúng màn hình tại `position`
-        #[cfg(target_os = "linux")]
-        let builder = builder.fullscreen(true);
-        let _window = builder.build()?;
+        let _window = overlay_builder(app, label, shot).build()?;
+
         #[cfg(target_os = "macos")]
         mac::raise_above_menu_bar(&_window);
     }
+
     Ok(())
+}
+
+/// Cửa sổ không viền, luôn trên cùng, phủ đúng một màn hình, ẩn sẵn.
+fn overlay_builder<'a>(
+    app: &'a AppHandle,
+    label: String,
+    shot: &Shot,
+) -> WebviewWindowBuilder<'a, tauri::Wry, AppHandle> {
+    let builder = WebviewWindowBuilder::new(app, label, WebviewUrl::App(PAGE.into()))
+        .decorations(false)
+        .always_on_top(true)
+        .skip_taskbar(true)
+        .resizable(false)
+        .shadow(false)
+        .visible_on_all_workspaces(true)
+        // nhiều màn hình: cú kéo đầu tiên trên overlay chưa focus không bị nuốt
+        .accept_first_mouse(true)
+        .position(f64::from(shot.x), f64::from(shot.y))
+        .inner_size(f64::from(shot.width), f64::from(shot.height))
+        .visible(false);
+
+    // Wayland bỏ qua position; fullscreen đặt trên builder sẽ nhắm đúng màn hình tại `position`
+    #[cfg(target_os = "linux")]
+    let builder = builder.fullscreen(true);
+
+    builder
 }
 
 /// Đóng mọi overlay và giải phóng lần chụp để phím tắt dùng lại được.
@@ -83,6 +100,7 @@ pub fn hide_overlays(app: &AppHandle) {
 /// Hiện lại overlay đã ẩn, focus một cái để phím tắt hoạt động.
 pub fn show_overlays(app: &AppHandle) {
     let mut focused = false;
+
     for window in overlay_windows(app) {
         let _ = window.show();
         focused = focused || window.set_focus().is_ok();
@@ -92,9 +110,13 @@ pub fn show_overlays(app: &AppHandle) {
 /// Xử lý scheme `shot://`.
 pub fn serve_shot(app: &AppHandle, request: &Request<Vec<u8>>) -> Response<Vec<u8>> {
     let index: Option<usize> = request.uri().path().trim_start_matches('/').parse().ok();
+    let png = index.and_then(|index| app.state::<Shots>().png(index));
+
     // CORS để trang vẽ ảnh lên canvas mà vẫn xuất được (canvas không bị "tainted")
-    let response = Response::builder().header(header::ACCESS_CONTROL_ALLOW_ORIGIN, ANY_ORIGIN);
-    match index.and_then(|index| app.state::<Shots>().png(index)) {
+    let response =
+        Response::builder().header(header::ACCESS_CONTROL_ALLOW_ORIGIN, ANY_ORIGIN);
+
+    match png {
         Some(png) => response.header(header::CONTENT_TYPE, PNG_MIME).body(png),
         None => response.status(StatusCode::NOT_FOUND).body(Vec::new()),
     }
@@ -114,7 +136,8 @@ mod mac {
             let ns_window: &NSWindow = unsafe { &*(pointer as *const NSWindow) };
             ns_window.setLevel(ABOVE_MENU_BAR_LEVEL);
             ns_window.setCollectionBehavior(
-                NSWindowCollectionBehavior::CanJoinAllSpaces | NSWindowCollectionBehavior::FullScreenAuxiliary,
+                NSWindowCollectionBehavior::CanJoinAllSpaces
+                    | NSWindowCollectionBehavior::FullScreenAuxiliary,
             );
         }
     }

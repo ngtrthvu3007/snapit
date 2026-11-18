@@ -20,27 +20,40 @@ export const CLASS = {
   error: "error",
 } as const;
 
-export const byId = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
+export const byId = <T extends HTMLElement = HTMLElement>(id: string) =>
+  document.getElementById(id) as T;
 
 type ElementOptions = { id?: string; className?: string; text?: string; title?: string };
 
 /** Tạo phần tử với id/class/nội dung/tooltip; tooltip cũng là aria-label. */
-export function createElement<K extends keyof HTMLElementTagNameMap>(tag: K, options: ElementOptions = {}) {
+export function createElement<K extends keyof HTMLElementTagNameMap>(
+  tag: K,
+  options: ElementOptions = {},
+) {
   const element = document.createElement(tag);
+
   if (options.id) element.id = options.id;
   if (options.className) element.className = options.className;
   if (options.text) element.textContent = options.text;
+
   if (options.title) {
     element.title = options.title;
     element.setAttribute("aria-label", options.title);
   }
+
   return element;
 }
 
 /** Lấy phần tử theo id, tạo mới và gắn vào body nếu chưa có. */
-export function ensureElement<K extends keyof HTMLElementTagNameMap>(tag: K, id: string): HTMLElementTagNameMap[K] {
+export function ensureElement<K extends keyof HTMLElementTagNameMap>(
+  tag: K,
+  id: string,
+): HTMLElementTagNameMap[K] {
   const existing = document.getElementById(id);
-  if (existing) return existing as HTMLElementTagNameMap[K];
+  if (existing) {
+    return existing as HTMLElementTagNameMap[K];
+  }
+
   const element = createElement(tag, { id });
   document.body.append(element);
   return element;

@@ -16,32 +16,52 @@ async function createEditor(): Promise<Editor> {
   image.crossOrigin = "anonymous"; // để canvas xuất ảnh không bị "tainted"
   image.src = shotUrl(monitorFromLabel(overlayWindow.label));
   await image.decode();
+
   const canvas = document.createElement("canvas");
   document.body.append(canvas);
+
   return new Editor(canvas, image);
 }
 
+// ── Copy / lưu ──────────────────────────────────────────────
+
 let busy = false;
+
 /** Bỏ qua copy/save khi đang có một lệnh chạy (bấm đúp, giữ phím). */
 async function exportSelection(send: (png: Uint8Array) => Promise<unknown>) {
-  if (busy || !editor.selection) return;
+  const selection = editor.selection;
+  if (busy || !selection) {
+    return;
+  }
+
   busy = true;
   try {
     editor.commitText();
-    await send(await composeExport(editor.image, editor.selection, editor.shapes.items, editor.scale));
+    const png = await composeExport(
+      editor.image,
+      selection,
+      editor.shapes.items,
+      editor.scale,
+    );
+    await send(png);
   } catch (error) {
     showNotice(String(error));
   } finally {
     busy = false;
   }
 }
+
 const copy = () => exportSelection(copyPng);
 const save = () => exportSelection(savePng);
 
+// ── Khởi động ───────────────────────────────────────────────
+
 let editor: Editor;
+
 try {
   editor = await createEditor();
   mountToolbar(editor, { copy, save, close: closeOverlays });
+
   await overlayWindow.show();
   await overlayWindow.setFocus();
 } catch (error) {
@@ -51,6 +71,8 @@ try {
   throw error;
 }
 
+// ── Phím tắt ────────────────────────────────────────────────
+
 /** Phím tắt dùng kèm ⌘ / Ctrl. */
 const COMMAND_SHORTCUTS: Record<string, () => unknown> = {
   [SHORTCUT_CODES.copy]: copy,
@@ -58,9 +80,27 @@ const COMMAND_SHORTCUTS: Record<string, () => unknown> = {
   [SHORTCUT_CODES.undo]: () => editor.undo(),
 };
 
+function shortcutFor(event: KeyboardEvent): (() => unknown) | undefined {
+  if (event.key === KEY.escape) {
+    return closeOverlays;
+  }
+
+  if (hasCommandKey(event)) {
+    return COMMAND_SHORTCUTS[event.code];
+  }
+
+  return undefined;
+}
+
 addEventListener("keydown", (event) => {
-  const action = event.key === KEY.escape ? closeOverlays : hasCommandKey(event) && COMMAND_SHORTCUTS[event.code];
-  if (!action) return;
+  const action = shortcutFor(event);
+  if (!action) {
+    return;
+  }
+
   event.preventDefault();
-  if (!event.repeat) action();
+
+  if (!event.repeat) {
+    action();
+  }
 });

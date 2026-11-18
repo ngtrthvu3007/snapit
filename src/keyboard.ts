@@ -13,7 +13,8 @@ type ModifierState = Pick<KeyboardEvent, "metaKey" | "ctrlKey" | "altKey" | "shi
 export const isModifierCode = (code: string) => MODIFIER_CODE.test(code);
 
 /** Có giữ phím bổ trợ nào không. */
-export const hasModifier = (event: ModifierState) => event.metaKey || event.ctrlKey || event.altKey || event.shiftKey;
+export const hasModifier = (event: ModifierState) =>
+  event.metaKey || event.ctrlKey || event.altKey || event.shiftKey;
 
 /** Phím "lệnh" của nền tảng: ⌘ trên Mac, Ctrl ở nơi khác (chấp nhận cả hai cho tiện). */
 export const hasCommandKey = (event: ModifierState) => event.metaKey || event.ctrlKey;

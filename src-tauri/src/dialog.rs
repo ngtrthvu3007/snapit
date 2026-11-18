@@ -14,5 +14,9 @@ pub fn to_message(error: impl Display) -> String {
 /// Đừng gọi khi overlay đang hiện: overlay nằm trên mọi hộp thoại.
 pub fn show_error(app: &AppHandle, message: &str) {
     eprintln!("error: {message}");
-    app.dialog().message(message).title(TITLE).kind(MessageDialogKind::Error).show(|_| {});
+    app.dialog()
+        .message(message)
+        .title(TITLE)
+        .kind(MessageDialogKind::Error)
+        .show(|_| {});
 }

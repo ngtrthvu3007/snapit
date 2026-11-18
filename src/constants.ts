@@ -17,9 +17,14 @@ export const FRAME = {
   hairlineOffset: 0.5,
   /** Vị trí 8 tay nắm, tính theo tỉ lệ chiều rộng/cao vùng chọn. */
   handleAnchors: [
-    [0, 0], [0.5, 0], [1, 0],
-    [0, 0.5], [1, 0.5],
-    [0, 1], [0.5, 1], [1, 1],
+    [0, 0],
+    [0.5, 0],
+    [1, 0],
+    [0, 0.5],
+    [1, 0.5],
+    [0, 1],
+    [0.5, 1],
+    [1, 1],
   ],
 } as const;
 
@@ -40,11 +45,27 @@ export const TOOLBAR_GAP = 8;
 
 // ── Công cụ vẽ ────────────────────────────────────────────
 
-export const PALETTE = ["#ff3b30", "#ff9500", "#ffcc00", "#34c759", "#007aff", "#af52de", "#000000", "#ffffff"];
+export const PALETTE = [
+  "#ff3b30",
+  "#ff9500",
+  "#ffcc00",
+  "#34c759",
+  "#007aff",
+  "#af52de",
+  "#000000",
+  "#ffffff",
+];
 export const DEFAULT_COLOR = PALETTE[0];
 
 /** Độ dày nét theo công cụ; với text là cỡ chữ. */
-export const TOOL_WIDTH: Record<Tool, number> = { pen: 3, line: 3, arrow: 3, rect: 3, marker: 16, text: 18 };
+export const TOOL_WIDTH: Record<Tool, number> = {
+  pen: 3,
+  line: 3,
+  arrow: 3,
+  rect: 3,
+  marker: 16,
+  text: 18,
+};
 
 export const MARKER_ALPHA = 0.4;
 

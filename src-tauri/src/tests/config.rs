@@ -1,10 +1,13 @@
 use std::path::PathBuf;
 
-use crate::config::{Config, default_hotkey, file_path, is_wayland, load, save, with_hotkey};
+use crate::config::{
+    Config, default_hotkey, file_path, is_wayland, load, save, with_hotkey,
+};
 
 /// Thư mục tạm riêng cho từng test, đã dọn sạch.
 fn temporary_directory(name: &str) -> PathBuf {
-    let directory = std::env::temp_dir().join(format!("snapit-test-{name}-{}", std::process::id()));
+    let directory =
+        std::env::temp_dir().join(format!("snapit-test-{name}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&directory);
     directory
 }
@@ -15,7 +18,10 @@ fn write_config(directory: &PathBuf, text: &str) {
 }
 
 fn config(hotkey: &str, autostart_initialized: bool) -> Config {
-    Config { hotkey: hotkey.into(), autostart_initialized }
+    Config {
+        hotkey: hotkey.into(),
+        autostart_initialized,
+    }
 }
 
 #[test]
@@ -49,7 +55,10 @@ fn roundtrip_creates_directory() {
 
 #[test]
 fn with_hotkey_keeps_other_settings() {
-    assert_eq!(with_hotkey(Ok(config("F1", false)), "F2"), config("F2", false));
+    assert_eq!(
+        with_hotkey(Ok(config("F1", false)), "F2"),
+        config("F2", false)
+    );
 }
 
 #[test]

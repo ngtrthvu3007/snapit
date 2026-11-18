@@ -22,12 +22,19 @@ pub struct Config {
 
 impl Default for Config {
     fn default() -> Self {
-        Self { hotkey: default_hotkey().into(), autostart_initialized: false }
+        Self {
+            hotkey: default_hotkey().into(),
+            autostart_initialized: false,
+        }
     }
 }
 
 pub fn default_hotkey() -> &'static str {
-    if cfg!(target_os = "macos") { MACOS_DEFAULT_HOTKEY } else { LINUX_DEFAULT_HOTKEY }
+    if cfg!(target_os = "macos") {
+        MACOS_DEFAULT_HOTKEY
+    } else {
+        LINUX_DEFAULT_HOTKEY
+    }
 }
 
 pub fn file_path(directory: &Path) -> PathBuf {
@@ -38,7 +45,8 @@ pub fn file_path(directory: &Path) -> PathBuf {
 /// để lỗi gõ khi sửa tay không bị nhầm thành lần chạy đầu.
 pub fn load(directory: &Path) -> Result<Config, String> {
     let path = file_path(directory);
-    let with_path = |error: &dyn std::fmt::Display| format!("{}: {error}", path.display());
+    let with_path =
+        |error: &dyn std::fmt::Display| format!("{}: {error}", path.display());
     match std::fs::read_to_string(&path) {
         Ok(text) => serde_json::from_str(&text).map_err(|error| with_path(&error)),
         Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(Config::default()),
@@ -54,8 +62,14 @@ pub fn save(directory: &Path, config: &Config) -> io::Result<()> {
 /// Config cần lưu sau khi người dùng chọn phím mới. File hỏng sẽ bị thay,
 /// nhưng bản thay không được giống lần chạy đầu (sẽ bật lại autostart).
 pub fn with_hotkey(loaded: Result<Config, String>, hotkey: &str) -> Config {
-    let base = loaded.unwrap_or(Config { autostart_initialized: true, ..Config::default() });
-    Config { hotkey: hotkey.into(), ..base }
+    let base = loaded.unwrap_or(Config {
+        autostart_initialized: true,
+        ..Config::default()
+    });
+    Config {
+        hotkey: hotkey.into(),
+        ..base
+    }
 }
 
 pub fn is_wayland(session_type: Option<&str>) -> bool {

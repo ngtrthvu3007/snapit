@@ -55,7 +55,9 @@ pub struct CaptureGuard(AtomicBool);
 
 impl CaptureGuard {
     pub fn try_begin(&self) -> bool {
-        self.0.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_ok()
+        self.0
+            .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
+            .is_ok()
     }
     pub fn end(&self) {
         self.0.store(false, Ordering::Release);
@@ -67,26 +69,37 @@ pub fn trigger(app: &AppHandle) {
     if !app.state::<CaptureGuard>().try_begin() {
         return;
     }
+
     let app = app.clone();
-    std::thread::spawn(move || {
-        let started = Instant::now();
-        let shots = match capture_all() {
-            Ok(shots) => shots,
-            Err(message) => return fail(&app, &message),
-        };
-        eprintln!("captured {} monitor(s) in {:?}", shots.len(), started.elapsed());
-        app.state::<Shots>().replace(shots);
-        let main_thread_app = app.clone();
-        let scheduled = app.run_on_main_thread(move || {
-            if let Err(error) = overlay::open_overlays(&main_thread_app) {
-                overlay::close_overlays(main_thread_app.clone());
-                show_error(&main_thread_app, &to_message(error));
-            }
-        });
-        if let Err(error) = scheduled {
-            fail(&app, &to_message(error));
+    std::thread::spawn(move || capture_and_open(app));
+}
+
+fn capture_and_open(app: AppHandle) {
+    let started = Instant::now();
+
+    let shots = match capture_all() {
+        Ok(shots) => shots,
+        Err(message) => return fail(&app, &message),
+    };
+
+    eprintln!(
+        "captured {} monitor(s) in {:?}",
+        shots.len(),
+        started.elapsed()
+    );
+    app.state::<Shots>().replace(shots);
+
+    let main_thread_app = app.clone();
+    let scheduled = app.run_on_main_thread(move || {
+        if let Err(error) = overlay::open_overlays(&main_thread_app) {
+            overlay::close_overlays(main_thread_app.clone());
+            show_error(&main_thread_app, &to_message(error));
         }
     });
+
+    if let Err(error) = scheduled {
+        fail(&app, &to_message(error));
+    }
 }
 
 /// Huỷ lần chụp đang dở và báo lỗi.
@@ -97,34 +110,57 @@ fn fail(app: &AppHandle, message: &str) {
 
 /// Không có màn hình nào thì không overlay nào mở, lần chụp sẽ kẹt mãi → coi là lỗi.
 pub(crate) fn require_monitors(shots: Vec<Shot>) -> Result<Vec<Shot>, String> {
-    if shots.is_empty() { Err(NO_MONITORS_MESSAGE.into()) } else { Ok(shots) }
+    if shots.is_empty() {
+        Err(NO_MONITORS_MESSAGE.into())
+    } else {
+        Ok(shots)
+    }
 }
 
 fn capture_all() -> Result<Vec<Shot>, String> {
     ensure_permission()?;
-    // ponytail: trên Wayland xcap gọi portal mỗi màn hình một lần; nếu hiện N hộp thoại thì chụp 1 lần rồi cắt
-    let shots = xcap::Monitor::all()
-        .map_err(to_message)?
+
+    // ponytail: trên Wayland xcap gọi portal mỗi màn hình một lần;
+    // nếu hiện N hộp thoại thì chụp 1 lần rồi cắt
+    let monitors = xcap::Monitor::all().map_err(to_message)?;
+    let shots = monitors
         .iter()
-        .map(|monitor| {
-            Ok(Shot {
-                x: monitor.x().map_err(to_message)?,
-                y: monitor.y().map_err(to_message)?,
-                width: monitor.width().map_err(to_message)?,
-                height: monitor.height().map_err(to_message)?,
-                png: encode_png_fast(&monitor.capture_image().map_err(to_message)?)?,
-            })
-        })
+        .map(capture_monitor)
         .collect::<Result<Vec<_>, String>>()?;
+
     require_monitors(shots)
+}
+
+fn capture_monitor(monitor: &xcap::Monitor) -> Result<Shot, String> {
+    let image = monitor.capture_image().map_err(to_message)?;
+
+    Ok(Shot {
+        x: monitor.x().map_err(to_message)?,
+        y: monitor.y().map_err(to_message)?,
+        width: monitor.width().map_err(to_message)?,
+        height: monitor.height().map_err(to_message)?,
+        png: encode_png_fast(&image)?,
+    })
 }
 
 /// Ưu tiên tốc độ hơn dung lượng: PNG chỉ đi tới webview của chính app.
 fn encode_png_fast(image: &RgbaImage) -> Result<Vec<u8>, String> {
     let mut png = Vec::new();
-    PngEncoder::new_with_quality(&mut png, CompressionType::Fast, FilterType::NoFilter)
-        .write_image(image, image.width(), image.height(), ExtendedColorType::Rgba8)
+    let encoder = PngEncoder::new_with_quality(
+        &mut png,
+        CompressionType::Fast,
+        FilterType::NoFilter,
+    );
+
+    encoder
+        .write_image(
+            image,
+            image.width(),
+            image.height(),
+            ExtendedColorType::Rgba8,
+        )
         .map_err(to_message)?;
+
     Ok(png)
 }
 

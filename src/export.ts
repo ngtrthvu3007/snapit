@@ -21,17 +21,30 @@ export async function composeExport(
   scale: Scale,
 ): Promise<Uint8Array> {
   const source = exportSourceRect(selection, scale);
+  const { width, height } = source;
+
   const canvas = document.createElement("canvas");
-  canvas.width = source.width;
-  canvas.height = source.height;
+  canvas.width = width;
+  canvas.height = height;
   const context = canvas.getContext("2d")!;
-  context.imageSmoothingEnabled = false; // chép nguyên pixel màn hình
-  context.drawImage(image, source.x, source.y, source.width, source.height, 0, 0, source.width, source.height);
-  context.imageSmoothingEnabled = true; // hình vẽ vẫn được khử răng cưa
-  // hình vẽ dùng CSS px theo màn hình → đưa về khung ảnh cắt
+
+  // chép nguyên pixel màn hình
+  context.imageSmoothingEnabled = false;
+  context.drawImage(image, source.x, source.y, width, height, 0, 0, width, height);
+
+  // hình vẽ vẫn được khử răng cưa; dùng CSS px theo màn hình → đưa về khung ảnh cắt
+  context.imageSmoothingEnabled = true;
   context.setTransform(scale.x, 0, 0, scale.y, -source.x, -source.y);
-  for (const shape of shapes) drawShape(context, shape);
-  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, PNG_MIME));
-  if (!blob) throw new Error("PNG encoding failed");
+  for (const shape of shapes) {
+    drawShape(context, shape);
+  }
+
+  const blob = await new Promise<Blob | null>((resolve) => {
+    canvas.toBlob(resolve, PNG_MIME);
+  });
+  if (!blob) {
+    throw new Error("PNG encoding failed");
+  }
+
   return new Uint8Array(await blob.arrayBuffer());
 }

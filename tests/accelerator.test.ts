@@ -1,7 +1,10 @@
 import { expect, test } from "vitest";
 import { displayAccelerator, toAccelerator } from "../src/accelerator";
 
-const key = (code: string, mods: Partial<Record<"metaKey" | "ctrlKey" | "altKey" | "shiftKey", boolean>> = {}) => ({
+const key = (
+  code: string,
+  mods: Partial<Record<"metaKey" | "ctrlKey" | "altKey" | "shiftKey", boolean>> = {},
+) => ({
   code,
   metaKey: false,
   ctrlKey: false,
@@ -11,8 +14,12 @@ const key = (code: string, mods: Partial<Record<"metaKey" | "ctrlKey" | "altKey"
 });
 
 test("modifiers + key, in a fixed order, with platform names", () => {
-  expect(toAccelerator(key("Digit2", { metaKey: true, shiftKey: true }), true)).toBe("Command+Shift+Digit2");
-  expect(toAccelerator(key("KeyS", { ctrlKey: true, altKey: true }), false)).toBe("Control+Alt+KeyS");
+  expect(toAccelerator(key("Digit2", { metaKey: true, shiftKey: true }), true)).toBe(
+    "Command+Shift+Digit2",
+  );
+  expect(toAccelerator(key("KeyS", { ctrlKey: true, altKey: true }), false)).toBe(
+    "Control+Alt+KeyS",
+  );
   expect(toAccelerator(key("KeyS", { metaKey: true }), false)).toBe("Super+KeyS");
   expect(toAccelerator(key("KeyS", { altKey: true }), true)).toBe("Option+KeyS");
 });
@@ -35,6 +42,8 @@ test("function keys and PrintScreen work alone", () => {
 
 test("display form is readable", () => {
   expect(displayAccelerator("Command+Shift+Digit2")).toBe("Command + Shift + 2");
-  expect(displayAccelerator("CommandOrControl+Shift+KeyS")).toBe("CommandOrControl + Shift + S");
+  expect(displayAccelerator("CommandOrControl+Shift+KeyS")).toBe(
+    "CommandOrControl + Shift + S",
+  );
   expect(displayAccelerator("PrintScreen")).toBe("PrintScreen");
 });

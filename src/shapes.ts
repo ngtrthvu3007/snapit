@@ -3,7 +3,13 @@ import type { Point } from "./geometry";
 
 export type Tool = "pen" | "line" | "arrow" | "rect" | "marker" | "text";
 /** Toạ độ theo CSS px của cửa sổ overlay. Với text, `width` là cỡ chữ. */
-export type Shape = { tool: Tool; color: string; width: number; points: Point[]; text?: string };
+export type Shape = {
+  tool: Tool;
+  color: string;
+  width: number;
+  points: Point[];
+  text?: string;
+};
 
 /** Công cụ ghi mọi điểm con trỏ đi qua; các công cụ khác chỉ giữ điểm đầu và cuối. */
 export const FREEHAND_TOOLS: ReadonlySet<Tool> = new Set(["pen", "marker"]);
@@ -26,6 +32,7 @@ export function arrowHead(tail: Point, tip: Point, size: number): [Point, Point]
     x: tip.x - size * Math.cos(shaftAngle + offset),
     y: tip.y - size * Math.sin(shaftAngle + offset),
   });
+
   return [wing(ARROW_HEAD.angle), wing(-ARROW_HEAD.angle)];
 }
 
@@ -44,11 +51,21 @@ export function newShapeStack() {
 
 // ── Vẽ ────────────────────────────────────────────────────
 
-type DrawFunction = (context: CanvasRenderingContext2D, shape: Shape, start: Point, end: Point) => void;
+type DrawFunction = (
+  context: CanvasRenderingContext2D,
+  shape: Shape,
+  start: Point,
+  end: Point,
+) => void;
 
 function tracePath(context: CanvasRenderingContext2D, points: Point[]) {
+  const [first, ...rest] = points;
+
   context.beginPath();
-  points.forEach((point, index) => (index === 0 ? context.moveTo(point.x, point.y) : context.lineTo(point.x, point.y)));
+  context.moveTo(first.x, first.y);
+  for (const point of rest) {
+    context.lineTo(point.x, point.y);
+  }
 }
 
 function strokePath(context: CanvasRenderingContext2D, points: Point[]) {
@@ -72,25 +89,42 @@ const DRAW: Record<Tool, DrawFunction> = {
   line: (context, _shape, start, end) => strokePath(context, [start, end]),
   arrow: (context, shape, start, end) => {
     strokePath(context, [start, end]);
-    const size = Math.max(ARROW_HEAD.minSize, shape.width * ARROW_HEAD.sizePerStrokeWidth);
+    const size = Math.max(
+      ARROW_HEAD.minSize,
+      shape.width * ARROW_HEAD.sizePerStrokeWidth,
+    );
     fillPolygon(context, [end, ...arrowHead(start, end, size)]);
   },
   rect: (context, _shape, start, end) =>
-    context.strokeRect(Math.min(start.x, end.x), Math.min(start.y, end.y), Math.abs(end.x - start.x), Math.abs(end.y - start.y)),
+    context.strokeRect(
+      Math.min(start.x, end.x),
+      Math.min(start.y, end.y),
+      Math.abs(end.x - start.x),
+      Math.abs(end.y - start.y),
+    ),
   text: (context, shape, start) => {
     context.font = `${shape.width}px ${TEXT.fontFamily}`;
     context.textBaseline = "top";
     const lineHeight = shape.width * TEXT.lineHeight;
-    (shape.text ?? "").split("\n").forEach((line, index) => context.fillText(line, start.x, start.y + index * lineHeight));
+    const lines = (shape.text ?? "").split("\n");
+
+    lines.forEach((line, index) => {
+      context.fillText(line, start.x, start.y + index * lineHeight);
+    });
   },
 };
 
 /** Vẽ trong hệ toạ độ hiện tại của context; khi xuất ảnh, caller scale context. */
 export function drawShape(context: CanvasRenderingContext2D, shape: Shape) {
+  const start = shape.points[0];
+  const end = shape.points[shape.points.length - 1];
+
   context.save();
   context.strokeStyle = context.fillStyle = shape.color;
   context.lineWidth = shape.width;
   context.lineCap = context.lineJoin = "round";
-  DRAW[shape.tool](context, shape, shape.points[0], shape.points[shape.points.length - 1]);
+
+  DRAW[shape.tool](context, shape, start, end);
+
   context.restore();
 }

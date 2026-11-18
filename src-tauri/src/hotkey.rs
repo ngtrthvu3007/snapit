@@ -10,7 +10,11 @@ use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 
 use crate::{capture, config, dialog::show_error};
 
-const NO_GLOBAL_KEYS_MESSAGE: &str = "This desktop doesn't let apps set global shortcuts.";
+const NO_GLOBAL_KEYS_MESSAGE: &str =
+    "This desktop doesn't let apps set global shortcuts.";
+const TAKEN_MESSAGE: &str =
+    "This shortcut is taken by another app or the system. Try another one.";
+const NOT_SAVED_MESSAGE: &str = "The new hotkey works now but couldn't be saved";
 const CHANGE_HINT: &str = "Pick another one from the tray menu → Change hotkey…";
 
 /// Phím chụp đang dùng, và phiên này có đăng ký phím toàn cục được không.
@@ -27,32 +31,46 @@ fn state(app: &AppHandle) -> tauri::State<'_, HotkeyState> {
 }
 
 fn current(app: &AppHandle) -> String {
-    state(app).current.lock().expect("hotkey mutex poisoned").clone()
+    state(app)
+        .current
+        .lock()
+        .expect("hotkey mutex poisoned")
+        .clone()
 }
 
 pub fn parse(accelerator: &str) -> Result<Shortcut, String> {
-    Shortcut::from_str(accelerator).map_err(|error| format!("\"{accelerator}\" is not a valid shortcut: {error}"))
+    Shortcut::from_str(accelerator)
+        .map_err(|error| format!("\"{accelerator}\" is not a valid shortcut: {error}"))
 }
 
 /// Đăng ký phím chụp theo config. Phím không đăng ký được thì báo lỗi, không dừng app.
 pub fn init(app: &AppHandle, hotkey: &str, config_directory: &Path) -> tauri::Result<()> {
-    let global = !config::is_wayland(std::env::var(config::SESSION_TYPE_ENV).ok().as_deref());
-    app.manage(HotkeyState { current: Mutex::new(hotkey.into()), config_directory: config_directory.into(), global });
+    let session_type = std::env::var(config::SESSION_TYPE_ENV).ok();
+    let global = !config::is_wayland(session_type.as_deref());
+
+    app.manage(HotkeyState {
+        current: Mutex::new(hotkey.into()),
+        config_directory: config_directory.into(),
+        global,
+    });
+
     if !global {
         return Ok(());
     }
-    app.plugin(
-        tauri_plugin_global_shortcut::Builder::new()
-            .with_handler(|app, _shortcut, event| {
-                if event.state == ShortcutState::Pressed {
-                    capture::trigger(app);
-                }
-            })
-            .build(),
-    )?;
+
+    let plugin = tauri_plugin_global_shortcut::Builder::new()
+        .with_handler(|app, _shortcut, event| {
+            if event.state == ShortcutState::Pressed {
+                capture::trigger(app);
+            }
+        })
+        .build();
+    app.plugin(plugin)?;
+
     if let Err(message) = register(app, &current(app)) {
         show_error(app, &format!("{message}\n{CHANGE_HINT}"));
     }
+
     Ok(())
 }
 
@@ -74,11 +92,14 @@ pub fn resume(app: &AppHandle) {
     if !state(app).global {
         return;
     }
+
     let accelerator = current(app);
-    if !app.global_shortcut().is_registered(accelerator.as_str()) {
-        if let Err(message) = register(app, &accelerator) {
-            show_error(app, &message);
-        }
+    if app.global_shortcut().is_registered(accelerator.as_str()) {
+        return;
+    }
+
+    if let Err(message) = register(app, &accelerator) {
+        show_error(app, &message);
     }
 }
 
@@ -91,7 +112,10 @@ pub struct HotkeyInfo {
 
 #[tauri::command]
 pub fn hotkey_info(app: AppHandle) -> HotkeyInfo {
-    HotkeyInfo { hotkey: current(&app), global: state(&app).global }
+    HotkeyInfo {
+        hotkey: current(&app),
+        global: state(&app).global,
+    }
 }
 
 /// Đăng ký phím mới ngay (phím cũ đang tạm tắt khi cửa sổ cài đặt mở) rồi lưu vào config.
@@ -101,11 +125,16 @@ pub fn set_hotkey(app: AppHandle, hotkey: String) -> Result<(), String> {
     if !hotkey_state.global {
         return Err(NO_GLOBAL_KEYS_MESSAGE.into());
     }
+
     app.global_shortcut()
         .register(parse(&hotkey)?)
-        .map_err(|error| format!("This shortcut is taken by another app or the system ({error}). Try another one."))?;
+        .map_err(|error| format!("{TAKEN_MESSAGE} ({error})"))?;
+
     *hotkey_state.current.lock().expect("hotkey mutex poisoned") = hotkey.clone();
+
     let directory = &hotkey_state.config_directory;
-    config::save(directory, &config::with_hotkey(config::load(directory), &hotkey))
-        .map_err(|error| format!("The new hotkey works now but couldn't be saved: {error}"))
+    let updated = config::with_hotkey(config::load(directory), &hotkey);
+
+    config::save(directory, &updated)
+        .map_err(|error| format!("{NOT_SAVED_MESSAGE}: {error}"))
 }

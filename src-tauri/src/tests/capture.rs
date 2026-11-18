@@ -13,6 +13,12 @@ fn guard_rejects_second_capture_until_end() {
 fn no_monitors_is_an_error() {
     // nếu không, không overlay nào mở và lần chụp không bao giờ được giải phóng
     assert!(require_monitors(Vec::new()).is_err());
-    let one_monitor = vec![Shot { x: 0, y: 0, width: 1, height: 1, png: Vec::new() }];
+    let one_monitor = vec![Shot {
+        x: 0,
+        y: 0,
+        width: 1,
+        height: 1,
+        png: Vec::new(),
+    }];
     assert_eq!(require_monitors(one_monitor).unwrap().len(), 1);
 }

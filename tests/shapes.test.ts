@@ -1,7 +1,15 @@
 import { expect, test } from "vitest";
 import { arrowHead, newShapeStack, type Shape, textShape } from "../src/shapes";
 
-const verticalLine = (x: number): Shape => ({ tool: "line", color: "#f00", width: 3, points: [{ x, y: 0 }, { x, y: 10 }] });
+const verticalLine = (x: number): Shape => ({
+  tool: "line",
+  color: "#f00",
+  width: 3,
+  points: [
+    { x, y: 0 },
+    { x, y: 10 },
+  ],
+});
 
 test("arrowHead wings sit behind the tip, mirrored", () => {
   const [upperWing, lowerWing] = arrowHead({ x: 0, y: 0 }, { x: 100, y: 0 }, 10);
@@ -26,6 +34,10 @@ test("textShape ignores empty / whitespace text", () => {
   expect(textShape("", { x: 1, y: 1 }, "#f00")).toBeNull();
   expect(textShape("  \n", { x: 1, y: 1 }, "#f00")).toBeNull();
   expect(textShape("hi", { x: 1, y: 1 }, "#f00")).toEqual({
-    tool: "text", color: "#f00", width: 18, points: [{ x: 1, y: 1 }], text: "hi",
+    tool: "text",
+    color: "#f00",
+    width: 18,
+    points: [{ x: 1, y: 1 }],
+    text: "hi",
   });
 });

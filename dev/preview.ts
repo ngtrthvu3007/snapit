@@ -27,7 +27,11 @@ function fakeScreenshot(): string {
   context.fillRect(0, 0, canvas.width, canvas.height);
   context.fillStyle = FAKE_SCREEN.labelColor;
   context.font = `${FAKE_SCREEN.labelFontSize * ratio}px sans-serif`;
-  context.fillText(FAKE_SCREEN.label, FAKE_SCREEN.labelPosition.x * ratio, FAKE_SCREEN.labelPosition.y * ratio);
+  context.fillText(
+    FAKE_SCREEN.label,
+    FAKE_SCREEN.labelPosition.x * ratio,
+    FAKE_SCREEN.labelPosition.y * ratio,
+  );
   return canvas.toDataURL();
 }
 

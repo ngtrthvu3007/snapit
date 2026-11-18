@@ -14,7 +14,9 @@ pub fn open(app: &AppHandle) -> tauri::Result<()> {
     if let Some(window) = app.get_webview_window(LABEL) {
         return window.set_focus();
     }
+
     hotkey::pause(app);
+
     let window = WebviewWindowBuilder::new(app, LABEL, WebviewUrl::App(PAGE.into()))
         .title(TITLE)
         .inner_size(WIDTH, HEIGHT)
@@ -25,6 +27,7 @@ pub fn open(app: &AppHandle) -> tauri::Result<()> {
         .center()
         .build()
         .inspect_err(|_| hotkey::resume(app))?;
+
     window.set_focus()
 }
 

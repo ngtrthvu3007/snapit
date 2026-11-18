@@ -16,7 +16,8 @@ const LABEL_SEPARATOR = "-";
 export const shotUrl = (monitor: string) => `${SHOT_URL_PREFIX}${monitor}`;
 
 /** Nhãn cửa sổ overlay có dạng `overlay-<lần chụp>-<số màn hình>`. */
-export const monitorFromLabel = (label: string) => label.slice(label.lastIndexOf(LABEL_SEPARATOR) + 1);
+export const monitorFromLabel = (label: string) =>
+  label.slice(label.lastIndexOf(LABEL_SEPARATOR) + 1);
 
 export const closeOverlays = () => invoke<void>(COMMAND.closeOverlays);
 /** Rust đóng overlay khi ảnh đã vào clipboard. PNG gửi dạng raw body. */

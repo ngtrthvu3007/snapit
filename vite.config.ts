@@ -3,10 +3,11 @@ import { defineConfig } from "vite";
 import process from "node:process";
 const host = process.env.TAURI_DEV_HOST;
 
-
 export default defineConfig(() => ({
   // mỗi loại cửa sổ một trang: overlay chụp và cài đặt phím tắt
-  build: { rollupOptions: { input: { overlay: "index.html", settings: "settings.html" } } },
+  build: {
+    rollupOptions: { input: { overlay: "index.html", settings: "settings.html" } },
+  },
 
   // tuỳ chọn Vite cho Tauri, chỉ dùng khi `tauri dev` / `tauri build`
   //

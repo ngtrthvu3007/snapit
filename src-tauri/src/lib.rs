@@ -23,12 +23,15 @@ const CAPTURE_FLAG: &str = "--capture";
 const BROKEN_CONFIG_MESSAGE: &str = "Ignoring broken settings, using defaults.";
 
 fn wants_capture<S: AsRef<str>>(arguments: &[S]) -> bool {
-    arguments.iter().any(|argument| argument.as_ref() == CAPTURE_FLAG)
+    arguments
+        .iter()
+        .any(|argument| argument.as_ref() == CAPTURE_FLAG)
 }
 
 /// Đọc config; file hỏng thì báo lỗi và dùng mặc định, không đụng tới file và autostart.
 fn load_config(app: &AppHandle) -> tauri::Result<config::Config> {
     let directory = app.path().app_config_dir()?;
+
     let config = match config::load(&directory) {
         Ok(config) => {
             autostart::init(app, &directory, config.clone());
@@ -39,33 +42,29 @@ fn load_config(app: &AppHandle) -> tauri::Result<config::Config> {
             config::Config::default()
         }
     };
+
     hotkey::init(app, &config.hotkey, &directory)?;
+
     Ok(config)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let app = tauri::Builder::default()
         // phải đứng đầu: lần mở thứ hai chuyển tham số sang đây rồi thoát
-        .plugin(tauri_plugin_single_instance::init(|app, arguments, _working_directory| {
-            if wants_capture(&arguments) {
-                capture::trigger(app);
-            }
-        }))
+        .plugin(tauri_plugin_single_instance::init(on_second_instance))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
-        .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, None))
+        .plugin(tauri_plugin_autostart::init(
+            MacosLauncher::LaunchAgent,
+            None,
+        ))
         .manage(Shots::default())
         .manage(CaptureGuard::default())
         .register_uri_scheme_protocol(overlay::SHOT_SCHEME, |context, request| {
             overlay::serve_shot(context.app_handle(), &request)
         })
-        .on_window_event(|window, event| {
-            if let WindowEvent::Destroyed = event {
-                overlay::on_window_destroyed(window.app_handle(), window.label());
-                settings::on_window_destroyed(window.app_handle(), window.label());
-            }
-        })
+        .on_window_event(on_window_event)
         .invoke_handler(tauri::generate_handler![
             overlay::close_overlays,
             output::copy_png,
@@ -73,23 +72,49 @@ pub fn run() {
             hotkey::hotkey_info,
             hotkey::set_hotkey
         ])
-        .setup(|app| {
-            #[cfg(target_os = "macos")]
-            app.set_activation_policy(tauri::ActivationPolicy::Accessory); // chỉ có icon tray, không có icon Dock
-
-            load_config(app.handle())?;
-            tray::build(app.handle())?;
-            if wants_capture(&std::env::args().collect::<Vec<_>>()) {
-                capture::trigger(app.handle());
-            }
-            Ok(())
-        })
+        .setup(|app| setup(app.handle()).map_err(Into::into))
         .build(tauri::generate_context!())
-        .expect("error while building tauri application")
-        .run(|_app, event| {
-            // vẫn chạy ở tray khi overlay cuối cùng đóng
-            if let RunEvent::ExitRequested { code: None, api, .. } = event {
-                api.prevent_exit();
-            }
-        });
+        .expect("error while building tauri application");
+
+    app.run(|_app, event| {
+        // vẫn chạy ở tray khi overlay cuối cùng đóng
+        if let RunEvent::ExitRequested {
+            code: None, api, ..
+        } = event
+        {
+            api.prevent_exit();
+        }
+    });
+}
+
+fn setup(app: &AppHandle) -> tauri::Result<()> {
+    // chỉ có icon tray, không có icon Dock
+    #[cfg(target_os = "macos")]
+    app.set_activation_policy(tauri::ActivationPolicy::Accessory)?;
+
+    load_config(app)?;
+    tray::build(app)?;
+
+    if wants_capture(&std::env::args().collect::<Vec<_>>()) {
+        capture::trigger(app);
+    }
+
+    Ok(())
+}
+
+fn on_second_instance(
+    app: &AppHandle,
+    arguments: Vec<String>,
+    _working_directory: String,
+) {
+    if wants_capture(&arguments) {
+        capture::trigger(app);
+    }
+}
+
+fn on_window_event(window: &tauri::Window, event: &WindowEvent) {
+    if let WindowEvent::Destroyed = event {
+        overlay::on_window_destroyed(window.app_handle(), window.label());
+        settings::on_window_destroyed(window.app_handle(), window.label());
+    }
 }

@@ -6,6 +6,7 @@ import { hotkeyInfo, setHotkey } from "./ipc";
 import { hasModifier, IS_MAC, isModifierCode, KEY } from "./keyboard";
 
 const MODIFIER_HINT = IS_MAC ? "⌘ ⌃ ⌥ ⇧" : "Ctrl, Alt, Shift or Super";
+
 const MESSAGE = {
   idle: "Click the box and press a new shortcut.",
   recording: "Press the new shortcut…",
@@ -16,11 +17,16 @@ const MESSAGE = {
 const closeWindow = () => getCurrentWindow().close();
 
 const info = await hotkeyInfo();
-if (info.global) setUpRecorder(info.hotkey);
-else showWaylandHelp();
+
+if (info.global) {
+  setUpRecorder(info.hotkey);
+} else {
+  showWaylandHelp();
+}
 
 function showWaylandHelp() {
   byId(ID.waylandSection).hidden = false;
+
   const closeButton = byId(ID.close);
   closeButton.addEventListener("click", closeWindow);
   closeButton.focus();
@@ -30,6 +36,7 @@ function setUpRecorder(currentHotkey: string) {
   const recorder = byId<HTMLButtonElement>(ID.recorder);
   const status = byId(ID.status);
   const saveButton = byId<HTMLButtonElement>(ID.save);
+
   let picked: string | null = null;
 
   const showStatus = (message: string, isError = false) => {
@@ -40,18 +47,34 @@ function setUpRecorder(currentHotkey: string) {
   byId(ID.recordSection).hidden = false;
   recorder.textContent = displayAccelerator(currentHotkey);
   showStatus(MESSAGE.idle);
-  recorder.addEventListener("focus", () => showStatus(picked ? MESSAGE.ready : MESSAGE.recording));
+
+  recorder.addEventListener("focus", () => {
+    showStatus(picked ? MESSAGE.ready : MESSAGE.recording);
+  });
+
   recorder.addEventListener("keydown", (event) => {
     const plain = !hasModifier(event);
-    if (plain && event.key === KEY.tab) return; // giữ điều hướng bằng bàn phím
+
+    // giữ điều hướng bằng bàn phím
+    if (plain && event.key === KEY.tab) {
+      return;
+    }
+
     event.preventDefault();
-    if (plain && event.key === KEY.escape) return closeWindow();
+
+    if (plain && event.key === KEY.escape) {
+      return closeWindow();
+    }
+
     const accelerator = toAccelerator(event, IS_MAC);
     if (!accelerator) {
       // chỉ nhắc khi đã bấm phím thật (không nhắc lúc mới giữ ⌘/Shift…)
-      if (!isModifierCode(event.code)) showStatus(MESSAGE.needsModifier);
+      if (!isModifierCode(event.code)) {
+        showStatus(MESSAGE.needsModifier);
+      }
       return;
     }
+
     picked = accelerator;
     recorder.textContent = displayAccelerator(accelerator);
     saveButton.disabled = false;
@@ -59,7 +82,10 @@ function setUpRecorder(currentHotkey: string) {
   });
 
   saveButton.addEventListener("click", async () => {
-    if (!picked) return;
+    if (!picked) {
+      return;
+    }
+
     try {
       await setHotkey(picked);
       await closeWindow();
@@ -67,6 +93,8 @@ function setUpRecorder(currentHotkey: string) {
       showStatus(String(error), true);
     }
   });
+
   byId(ID.cancel).addEventListener("click", closeWindow);
+
   recorder.focus();
 }

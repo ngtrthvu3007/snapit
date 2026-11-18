@@ -30,7 +30,12 @@ mod item_label {
 
 /// Icon trên tray / menu bar: Capture, Change hotkey…, Start at login ✓, Quit.
 pub fn build(app: &AppHandle) -> tauri::Result<()> {
-    let item = |id: &str, label: &str| MenuItem::with_id(app, id, label, true, None::<&str>);
+    let item =
+        |id: &str, label: &str| MenuItem::with_id(app, id, label, true, None::<&str>);
+
+    let capture = item(item_id::CAPTURE, item_label::CAPTURE)?;
+    let change_hotkey = item(item_id::CHANGE_HOTKEY, item_label::CHANGE_HOTKEY)?;
+    let quit = item(item_id::QUIT, item_label::QUIT)?;
     let start_at_login = CheckMenuItem::with_id(
         app,
         item_id::START_AT_LOGIN,
@@ -39,26 +44,20 @@ pub fn build(app: &AppHandle) -> tauri::Result<()> {
         autostart::is_enabled(app),
         None::<&str>,
     )?;
-    let menu = Menu::with_items(
-        app,
-        &[
-            &item(item_id::CAPTURE, item_label::CAPTURE)?,
-            &item(item_id::CHANGE_HOTKEY, item_label::CHANGE_HOTKEY)?,
-            &start_at_login,
-            &item(item_id::QUIT, item_label::QUIT)?,
-        ],
-    )?;
+
+    let menu =
+        Menu::with_items(app, &[&capture, &change_hotkey, &start_at_login, &quit])?;
+    let icon = app
+        .default_window_icon()
+        .expect("bundle has an icon")
+        .clone();
 
     TrayIconBuilder::with_id(TRAY_ID)
-        .icon(app.default_window_icon().expect("bundle has an icon").clone())
+        .icon(icon)
         .menu(&menu)
         .on_menu_event(move |app, event| match event.id.as_ref() {
             item_id::CAPTURE => capture::trigger(app),
-            item_id::CHANGE_HOTKEY => {
-                if let Err(error) = settings::open(app) {
-                    show_error(app, &to_message(error));
-                }
-            }
+            item_id::CHANGE_HOTKEY => open_settings(app),
             item_id::START_AT_LOGIN => {
                 let _ = start_at_login.set_checked(autostart::toggle(app));
             }
@@ -66,5 +65,12 @@ pub fn build(app: &AppHandle) -> tauri::Result<()> {
             _ => {}
         })
         .build(app)?;
+
     Ok(())
+}
+
+fn open_settings(app: &AppHandle) {
+    if let Err(error) = settings::open(app) {
+        show_error(app, &to_message(error));
+    }
 }

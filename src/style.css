@@ -13,37 +13,113 @@
   --notice-fg: #fff;
 }
 
-html, body { margin: 0; height: 100%; overflow: hidden; background: #000; user-select: none; font: 13px system-ui, sans-serif; }
-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; cursor: crosshair; }
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+  user-select: none;
+  font:
+    13px system-ui,
+    sans-serif;
+}
+canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  cursor: crosshair;
+}
 
 #toolbar {
-  position: fixed; top: 0; left: 0; display: flex; align-items: center; gap: 2px; padding: 4px;
-  background: var(--toolbar-bg); border-radius: 6px; box-shadow: var(--toolbar-shadow);
+  position: fixed;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  background: var(--toolbar-bg);
+  border-radius: 6px;
+  box-shadow: var(--toolbar-shadow);
 }
-#toolbar[hidden] { display: none; }
+#toolbar[hidden] {
+  display: none;
+}
 #toolbar button {
-  width: var(--button-size); height: var(--button-size); padding: 0; border: 0; border-radius: 4px;
-  background: transparent; color: var(--toolbar-fg); font-size: 16px; line-height: 1; cursor: pointer;
+  width: var(--button-size);
+  height: var(--button-size);
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--toolbar-fg);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
 }
-#toolbar button:hover { background: var(--toolbar-hover); }
-#toolbar button.active { background: var(--toolbar-active); }
-#toolbar button:focus-visible { outline: 2px solid var(--accent); }
+#toolbar button:hover {
+  background: var(--toolbar-hover);
+}
+#toolbar button.active {
+  background: var(--toolbar-active);
+}
+#toolbar button:focus-visible {
+  outline: 2px solid var(--accent);
+}
 #toolbar .swatch {
-  width: var(--swatch-size); height: var(--swatch-size); border-radius: 50%;
+  width: var(--swatch-size);
+  height: var(--swatch-size);
+  border-radius: 50%;
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25);
 }
-#toolbar .swatch.active { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--accent); }
-#toolbar input[type="color"] { width: 24px; height: 24px; padding: 0; border: 0; background: none; cursor: pointer; }
-#toolbar .sep { width: 1px; height: 20px; margin: 0 4px; background: var(--toolbar-separator); }
+#toolbar .swatch.active {
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 4px var(--accent);
+}
+#toolbar input[type="color"] {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+#toolbar .sep {
+  width: 1px;
+  height: 20px;
+  margin: 0 4px;
+  background: var(--toolbar-separator);
+}
 
 /* font, cỡ, màu, line-height đặt trong text-input.ts để khớp đúng chữ vẽ trên canvas */
 .text-input {
-  position: fixed; margin: 0; padding: 0; min-width: 40px; border: 1px dashed var(--text-input-border);
-  outline: none; background: transparent; resize: none; overflow: hidden; white-space: pre;
+  position: fixed;
+  margin: 0;
+  padding: 0;
+  min-width: 40px;
+  border: 1px dashed var(--text-input-border);
+  outline: none;
+  background: transparent;
+  resize: none;
+  overflow: hidden;
+  white-space: pre;
 }
 
 #notice {
-  position: fixed; top: 16px; left: 50%; transform: translateX(-50%); max-width: 80vw; padding: 8px 14px;
-  border-radius: 6px; background: var(--notice-bg); color: var(--notice-fg); box-shadow: var(--toolbar-shadow);
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 80vw;
+  padding: 8px 14px;
+  border-radius: 6px;
+  background: var(--notice-bg);
+  color: var(--notice-fg);
+  box-shadow: var(--toolbar-shadow);
 }
-#notice[hidden] { display: none; }
+#notice[hidden] {
+  display: none;
+}
