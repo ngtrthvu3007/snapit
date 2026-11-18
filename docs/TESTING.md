@@ -47,3 +47,11 @@ Verified on the company Mac: first launch writes `config.json` (`autostart_initi
 - [ ] Tray "Start at login" check mark matches reality; toggling off/on removes/creates the login item.
 - [ ] Installed `.app`: after logout/login Snapit is running in the tray. (macOS may show a "background item added" notice — expected.)
 - [ ] **Ubuntu:** `~/.config/autostart/Snapit.desktop` appears/disappears with the toggle; Snapit starts after re-login.
+
+## Task 8 — release builds
+
+macOS `.dmg` built on the company Mac: `src-tauri/target/release/bundle/dmg/Snapit_0.1.0_aarch64.dmg` (LSMinimumSystemVersion 13.0).
+
+- [ ] Install the `.dmg` on a personal Mac, follow README install steps exactly; note anything that differs.
+- [ ] **Ubuntu:** `npm run tauri build` → `.deb` + `.AppImage` in `src-tauri/target/release/bundle/`; fix README's apt dependency list if something was missing.
+- [ ] Full pass of every section above on both machines, then fill the spec's "Spike results" + README "Known limitations".
