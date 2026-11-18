@@ -115,7 +115,10 @@ Phần cần phần cứng thật (chụp, clipboard, nhiều màn hình, Waylan
 
 ## Build bản cài
 
+Việc của người giữ code; người dùng chỉ nhận file cài. Cần mã nguồn trên máy (clone repo hoặc copy cả thư mục) và môi trường như phần [Chạy dev](#chạy-dev).
+
 ```sh
+npm install --min-release-age=7
 npm run tauri build
 ```
 
