@@ -4,7 +4,13 @@ Tool chụp màn hình kiểu Lightshot cho macOS và Linux. Bấm phím, màn h
 
 ## Cài đặt
 
-Bạn chỉ cần **một file cài** (người giữ code gửi cho): `.dmg` cho Mac, `.deb` hoặc `.AppImage` cho Linux. Không cần clone repo hay cài thêm gì khác.
+Vào trang **Releases** của repo trên GitHub (`…/snapit/releases/latest`), tải đúng một file theo máy:
+
+- Mac (chip Apple hay Intel đều được): `Snapit_…_universal.dmg`
+- Ubuntu/Debian: `Snapit_…_amd64.deb`
+- Linux khác: `Snapit_…_amd64.AppImage`
+
+Không cần clone repo hay cài thêm gì khác.
 
 ### macOS (13 Ventura trở lên)
 
@@ -34,7 +40,6 @@ chmod +x Snapit_…_amd64.AppImage
 
 Lần đầu chụp GNOME có thể hỏi quyền, cứ cho phép. Nếu máy chạy X11 thì không cần bước này, phím PrintScreen tự chạy.
 
-Chưa có file cài thì phải tự build từ mã nguồn, xem [tài liệu kỹ thuật](docs/technical.md#build-bản-cài).
 
 ## Cách dùng
 

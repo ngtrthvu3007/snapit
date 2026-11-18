@@ -6,7 +6,7 @@ Những thứ test tự động không với tới được. Chạy trên Mac c�
 
 ## Ubuntu: build lần đầu
 
-Code riêng cho Linux **chưa từng được compile**. Cài gói theo [technical.md](technical.md#chạy-dev), chạy, sửa lỗi build trước đã.
+Code riêng cho Linux **chưa từng được compile**. Lần ra bản đầu tiên trên GitHub Actions sẽ biết ngay; hoặc cài gói theo [technical.md](technical.md#chạy-dev) rồi chạy trên laptop.
 
 ## Chụp & overlay
 
@@ -55,5 +55,6 @@ Code riêng cho Linux **chưa từng được compile**. Cài gói theo [technic
 
 ## Bản cài
 
-- [ ] Cài `.dmg` trên Mac cá nhân, làm đúng theo README; chỗ nào khác thì sửa README.
-- [ ] **Ubuntu:** `npm run tauri build` ra `.deb` + `.AppImage`; thiếu gói apt nào thì bổ sung vào technical.md.
+- [ ] Lần ra bản đầu tiên trên GitHub Actions: cả job Mac lẫn Linux đều xanh (Linux là lần compile đầu tiên của code Linux).
+- [ ] Tải `.dmg` từ Releases về Mac cá nhân, cài đúng theo README: không bị báo "damaged", chỉ cần "Open Anyway".
+- [ ] Tải `.deb` / `.AppImage` về Ubuntu, cài và chạy được.

@@ -113,18 +113,30 @@ npm run format                   # Prettier + rustfmt
 
 Phần cần phần cứng thật (chụp, clipboard, nhiều màn hình, Wayland) nằm trong [TESTING.md](TESTING.md).
 
-## Build bản cài
+## Ra bản mới
 
-Việc của người giữ code; người dùng chỉ nhận file cài. Cần mã nguồn trên máy (clone repo hoặc copy cả thư mục) và môi trường như phần [Chạy dev](#chạy-dev).
+GitHub Actions lo hết ([.github/workflows/release.yml](../.github/workflows/release.yml)):
 
 ```sh
-npm install --min-release-age=7
-npm run tauri build
+npm version 0.2.0          # sửa version trong package.json + tạo tag v0.2.0
+git push --follow-tags     # đẩy code + tag
 ```
 
-Ra file trong `src-tauri/target/release/bundle/`: `.dmg` khi build trên Mac, `.deb` + `.AppImage` khi build trên Linux. Muốn bản Mac chạy cả chip Intel thì thêm `--target universal-apple-darwin` (cần `rustup target add x86_64-apple-darwin`).
+Khoảng 10–15 phút sau, trang Releases có bản `v0.2.0` với `.dmg` (universal), `.deb`, `.AppImage`. Người dùng tự tải, không cần nhắn ai.
 
-Không có CI, không ký số: tool dùng nội bộ, build tay rồi gửi file là đủ.
+- Phiên bản chỉ khai ở `package.json` (`tauri.conf.json` trỏ sang đó).
+- Bản Mac ký ad-hoc (`signingIdentity: "-"`): miễn phí, tránh lỗi "app is damaged" khi tải từ mạng; người dùng vẫn phải "Open Anyway" lần đầu. Muốn hết bước đó thì cần Apple Developer ID ($99/năm).
+- Workflow chạy `npm test` trước khi build; test đỏ thì không ra bản.
+- Repo private: phút build trên macOS tính x10, mỗi lần ra bản tốn ~100–200 phút trong 2.000 phút miễn phí/tháng.
+
+Build tay trên máy (khi cần thử bản cài):
+
+```sh
+npm run tauri build                                   # bản cho máy đang dùng
+npm run tauri build -- --target universal-apple-darwin  # Mac chạy cả Intel
+```
+
+File ra ở `src-tauri/target/…/release/bundle/`. Build universal cần `rustup target add aarch64-apple-darwin x86_64-apple-darwin`.
 
 ## Quy ước
 
