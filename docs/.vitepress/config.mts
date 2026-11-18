@@ -6,7 +6,8 @@ const DOCS_BASE = process.env.DOCS_BASE ?? "/";
 const SITE_URL = process.env.SITE_URL; // trang giới thiệu (web/index.html), địa chỉ đầy đủ
 /** Đường dẫn trang giới thiệu khi chưa có SITE_URL: thư mục cha của tài liệu. */
 const SITE_ROOT = SITE_URL ?? DOCS_BASE.replace(/docs\/$/, "");
-const REPO_URL = process.env.REPO_URL;
+// link repo đặt sẵn ở "config.repo" trong package.json; trên GitHub Pages workflow tự điền link thật
+const REPO_URL = process.env.REPO_URL ?? process.env.npm_package_config_repo;
 
 /** Chữ hiển thị của một ngôn ngữ. Đường dẫn trang giống nhau, chỉ khác tiền tố. */
 type Copy = {
