@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "config": {
-    "repo": "https://github.com/OWNER/snapit"
+    "repo": "https://github.com/ngtrthvu3007/snapit"
   },
   "scripts": {
     "dev": "vite",
