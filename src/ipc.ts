@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 
-/** Rust commands (src-tauri/src/lib.rs `generate_handler!`). */
+/** Tên các command Rust (`generate_handler!` trong src-tauri/src/lib.rs). */
 const COMMAND = {
   closeOverlays: "close_overlays",
   copyPng: "copy_png",
@@ -9,20 +9,23 @@ const COMMAND = {
   setHotkey: "set_hotkey",
 } as const;
 
-/** URL of a monitor's frozen screenshot, served by Rust's `shot://` scheme. */
-export const shotUrl = (monitor: string) => `shot://localhost/${monitor}`;
+const SHOT_URL_PREFIX = "shot://localhost/";
+const LABEL_SEPARATOR = "-";
 
-/** Overlay windows are labelled `overlay-<capture>-<monitor index>`. */
-export const monitorFromLabel = (label: string) => label.slice(label.lastIndexOf("-") + 1);
+/** URL ảnh đóng băng của một màn hình, do scheme `shot://` bên Rust phục vụ. */
+export const shotUrl = (monitor: string) => `${SHOT_URL_PREFIX}${monitor}`;
+
+/** Nhãn cửa sổ overlay có dạng `overlay-<lần chụp>-<số màn hình>`. */
+export const monitorFromLabel = (label: string) => label.slice(label.lastIndexOf(LABEL_SEPARATOR) + 1);
 
 export const closeOverlays = () => invoke<void>(COMMAND.closeOverlays);
-/** Rust closes the overlays once the image is on the clipboard. PNG goes as a raw body. */
+/** Rust đóng overlay khi ảnh đã vào clipboard. PNG gửi dạng raw body. */
 export const copyPng = (png: Uint8Array) => invoke<void>(COMMAND.copyPng, png);
-/** Rust hides the overlays, asks where to save, and closes them on success. Resolves false on cancel. */
+/** Rust ẩn overlay, hỏi nơi lưu, đóng overlay nếu lưu xong. Trả về false khi huỷ. */
 export const savePng = (png: Uint8Array) => invoke<boolean>(COMMAND.savePng, png);
 
-/** The capture hotkey; `global` is false on Wayland, where the desktop owns global shortcuts. */
+/** Phím chụp hiện tại; `global` = false trên Wayland (desktop giữ quyền phím tắt toàn cục). */
 export type HotkeyInfo = { hotkey: string; global: boolean };
 export const hotkeyInfo = () => invoke<HotkeyInfo>(COMMAND.hotkeyInfo);
-/** Registers and saves the new capture hotkey; rejects with a readable message if it's taken. */
+/** Đăng ký và lưu phím chụp mới; reject kèm thông báo dễ hiểu nếu phím đã bị chiếm. */
 export const setHotkey = (hotkey: string) => invoke<void>(COMMAND.setHotkey, { hotkey });

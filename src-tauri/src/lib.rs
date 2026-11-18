@@ -1,4 +1,5 @@
-//! Snapit: tray app → hotkey → frozen-screen overlays → copy/save. This file only wires the pieces together.
+//! Snapit: app nằm ở tray → phím tắt → overlay màn hình đóng băng → copy/lưu.
+//! File này chỉ nối các phần lại với nhau.
 
 mod autostart;
 mod capture;
@@ -10,23 +11,44 @@ mod overlay;
 mod settings;
 mod tray;
 
+#[cfg(test)]
+mod tests;
+
 use capture::{CaptureGuard, Shots};
-use tauri::{Manager, RunEvent, WindowEvent};
+use tauri::{AppHandle, Manager, RunEvent, WindowEvent};
 use tauri_plugin_autostart::MacosLauncher;
 
-/// `snapit --capture` starts a capture (in the already-running instance, if any).
+/// `snapit --capture` bắt đầu chụp (trong instance đang chạy, nếu có).
 const CAPTURE_FLAG: &str = "--capture";
+const BROKEN_CONFIG_MESSAGE: &str = "Ignoring broken settings, using defaults.";
 
-fn wants_capture<S: AsRef<str>>(args: &[S]) -> bool {
-    args.iter().any(|a| a.as_ref() == CAPTURE_FLAG)
+fn wants_capture<S: AsRef<str>>(arguments: &[S]) -> bool {
+    arguments.iter().any(|argument| argument.as_ref() == CAPTURE_FLAG)
+}
+
+/// Đọc config; file hỏng thì báo lỗi và dùng mặc định, không đụng tới file và autostart.
+fn load_config(app: &AppHandle) -> tauri::Result<config::Config> {
+    let directory = app.path().app_config_dir()?;
+    let config = match config::load(&directory) {
+        Ok(config) => {
+            autostart::init(app, &directory, config.clone());
+            config
+        }
+        Err(message) => {
+            dialog::show_error(app, &format!("{BROKEN_CONFIG_MESSAGE}\n{message}"));
+            config::Config::default()
+        }
+    };
+    hotkey::init(app, &config.hotkey, &directory)?;
+    Ok(config)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        // must be first: a second launch forwards its arguments here and exits
-        .plugin(tauri_plugin_single_instance::init(|app, argv, _| {
-            if wants_capture(&argv) {
+        // phải đứng đầu: lần mở thứ hai chuyển tham số sang đây rồi thoát
+        .plugin(tauri_plugin_single_instance::init(|app, arguments, _working_directory| {
+            if wants_capture(&arguments) {
                 capture::trigger(app);
             }
         }))
@@ -35,7 +57,9 @@ pub fn run() {
         .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, None))
         .manage(Shots::default())
         .manage(CaptureGuard::default())
-        .register_uri_scheme_protocol(overlay::SHOT_SCHEME, |ctx, req| overlay::serve_shot(ctx.app_handle(), &req))
+        .register_uri_scheme_protocol(overlay::SHOT_SCHEME, |context, request| {
+            overlay::serve_shot(context.app_handle(), &request)
+        })
         .on_window_event(|window, event| {
             if let WindowEvent::Destroyed = event {
                 overlay::on_window_destroyed(window.app_handle(), window.label());
@@ -51,23 +75,10 @@ pub fn run() {
         ])
         .setup(|app| {
             #[cfg(target_os = "macos")]
-            app.set_activation_policy(tauri::ActivationPolicy::Accessory); // tray only, no Dock icon
+            app.set_activation_policy(tauri::ActivationPolicy::Accessory); // chỉ có icon tray, không có icon Dock
 
-            let cfg_dir = app.path().app_config_dir()?;
-            let cfg = match config::load(&cfg_dir) {
-                Ok(cfg) => {
-                    autostart::init(app.handle(), &cfg_dir, cfg.clone());
-                    cfg
-                }
-                // keep the user's file (and their autostart choice) untouched until they fix it
-                Err(e) => {
-                    dialog::show_error(app.handle(), &format!("Ignoring broken settings, using defaults.\n{e}"));
-                    config::Config::default()
-                }
-            };
+            load_config(app.handle())?;
             tray::build(app.handle())?;
-            hotkey::init(app.handle(), &cfg.hotkey, &cfg_dir)?;
-
             if wants_capture(&std::env::args().collect::<Vec<_>>()) {
                 capture::trigger(app.handle());
             }
@@ -75,21 +86,10 @@ pub fn run() {
         })
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
-        .run(|_, e| {
-            // keep running in the tray when the last overlay window closes
-            if let RunEvent::ExitRequested { code: None, api, .. } = e {
+        .run(|_app, event| {
+            // vẫn chạy ở tray khi overlay cuối cùng đóng
+            if let RunEvent::ExitRequested { code: None, api, .. } = event {
                 api.prevent_exit();
             }
         });
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn capture_flag_detected() {
-        assert!(wants_capture(&["snapit", "--capture"]));
-        assert!(!wants_capture(&["snapit"]));
-    }
 }

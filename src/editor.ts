@@ -1,57 +1,71 @@
 import { DEFAULT_COLOR } from "./constants";
-import { applyDrag, clampPoint, type Handle, hitHandle, normalizeRect, type Point, type Rect, type Scale, settleSelection } from "./geometry";
+import {
+  applyDrag,
+  clampPoint,
+  type Handle,
+  hitHandle,
+  type Point,
+  type Rect,
+  rectFromPoints,
+  type Scale,
+  settleSelection,
+} from "./geometry";
 import { renderScene } from "./renderer";
 import { FREEHAND_TOOLS, newShape, newShapeStack, type Shape, textShape, type Tool } from "./shapes";
 import { TextInput } from "./text-input";
 
-const HANDLE_CURSOR: Record<Handle, string> = {
-  n: "ns-resize", s: "ns-resize", e: "ew-resize", w: "ew-resize",
-  ne: "nesw-resize", sw: "nesw-resize", nw: "nwse-resize", se: "nwse-resize", move: "move",
-};
-const DEFAULT_CURSOR = "crosshair";
-const TEXT_CURSOR = "text";
+const CURSOR = {
+  default: "crosshair",
+  text: "text",
+  handle: {
+    n: "ns-resize", s: "ns-resize", e: "ew-resize", w: "ew-resize",
+    ne: "nesw-resize", sw: "nesw-resize", nw: "nwse-resize", se: "nwse-resize", move: "move",
+  } satisfies Record<Handle, string>,
+} as const;
 
-/** Dragging the selection: creating a new one, or moving/resizing the existing one. */
-type SelectionDrag = { handle: Handle | "new"; start: Point; orig: Rect | null };
+/** Đang kéo vùng chọn: tạo mới, hoặc di chuyển/đổi kích thước vùng cũ. */
+type SelectionDrag = { handle: Handle | "new"; start: Point; original: Rect | null };
 
-/** Selection + annotations on top of one monitor's frozen screenshot. */
+const pointOf = (event: PointerEvent): Point => ({ x: event.clientX, y: event.clientY });
+const delta = (from: Point, to: Point): Point => ({ x: to.x - from.x, y: to.y - from.y });
+
+/** Vùng chọn + hình vẽ trên ảnh đóng băng của một màn hình. */
 export class Editor {
   selection: Rect | null = null;
   readonly shapes = newShapeStack();
   tool: Tool | null = null;
   color = DEFAULT_COLOR;
-  /** called after every render */
+  /** Gọi sau mỗi lần vẽ lại. */
   onChange: () => void = () => {};
 
-  private readonly ctx: CanvasRenderingContext2D;
+  private readonly context: CanvasRenderingContext2D;
   private drag: SelectionDrag | null = null;
   private drawing: Shape | null = null;
   private textInput: TextInput | null = null;
 
   constructor(
     private readonly canvas: HTMLCanvasElement,
-    readonly img: HTMLImageElement,
+    readonly image: HTMLImageElement,
   ) {
-    this.ctx = canvas.getContext("2d")!;
-    // the window can still change size after it's shown (Linux maps fullscreen late)
+    this.context = canvas.getContext("2d")!;
+    // cửa sổ có thể đổi kích thước sau khi hiện (Linux bật fullscreen muộn)
     addEventListener("resize", () => this.fitCanvas());
-    this.fitCanvas(false);
-    canvas.addEventListener("pointerdown", (e) => this.onPointerDown(e));
-    canvas.addEventListener("pointermove", (e) => this.onPointerMove(e));
+    canvas.addEventListener("pointerdown", (event) => this.onPointerDown(event));
+    canvas.addEventListener("pointermove", (event) => this.onPointerMove(event));
     canvas.addEventListener("pointerup", () => this.onPointerUp());
-    this.render();
+    this.fitCanvas();
   }
 
-  /** Physical image pixels per CSS pixel; read live because the window size can change. */
+  /** Pixel ảnh thật / CSS pixel; đọc trực tiếp vì kích thước cửa sổ có thể đổi. */
   get scale(): Scale {
-    return { x: this.img.naturalWidth / innerWidth, y: this.img.naturalHeight / innerHeight };
+    return { x: this.image.naturalWidth / innerWidth, y: this.image.naturalHeight / innerHeight };
   }
 
   get bounds(): Rect {
-    return { x: 0, y: 0, w: innerWidth, h: innerHeight };
+    return { x: 0, y: 0, width: innerWidth, height: innerHeight };
   }
 
-  /** true while the selection itself is being dragged (the toolbar hides) */
+  /** true khi đang kéo chính vùng chọn (toolbar ẩn đi). */
   get adjusting(): boolean {
     return this.drag !== null;
   }
@@ -61,26 +75,25 @@ export class Editor {
     this.render();
   }
 
-  /** Turns the open text box into a shape (empty text adds nothing). */
+  /** Chốt ô chữ đang mở thành hình (chữ rỗng thì bỏ). */
   commitText() {
     const input = this.textInput;
     if (!input) return;
-    this.textInput = null;
-    input.remove();
-    const shape = textShape(input.value, input.at, this.color);
+    this.closeTextInput();
+    const shape = textShape(input.value, input.position, this.color);
     if (shape) this.shapes.push(shape);
     this.render();
   }
 
-  cancelText() {
+  closeTextInput() {
     this.textInput?.remove();
     this.textInput = null;
   }
 
   render() {
-    renderScene(this.ctx, {
-      img: this.img,
-      view: this.bounds,
+    renderScene(this.context, {
+      image: this.image,
+      viewport: this.bounds,
       scale: this.scale,
       selection: this.selection,
       shapes: this.drawing ? [...this.shapes.items, this.drawing] : this.shapes.items,
@@ -88,34 +101,34 @@ export class Editor {
     this.onChange();
   }
 
-  /** Sizes the canvas backing store to the window at device resolution. */
-  private fitCanvas(redraw = true) {
-    const dpr = devicePixelRatio;
-    this.canvas.width = innerWidth * dpr;
-    this.canvas.height = innerHeight * dpr;
-    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    if (redraw) this.render();
+  /** Đặt bộ đệm canvas bằng cửa sổ ở độ phân giải thiết bị. */
+  private fitCanvas() {
+    const pixelRatio = devicePixelRatio;
+    this.canvas.width = innerWidth * pixelRatio;
+    this.canvas.height = innerHeight * pixelRatio;
+    this.context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+    this.render();
   }
 
-  // ── pointer handling ────────────────────────────────────────────────
+  // ── Chuột ───────────────────────────────────────────────
 
-  private onPointerDown(e: PointerEvent) {
-    if (this.textInput) return this.commitText(); // clicking elsewhere confirms the text
-    const p = { x: e.clientX, y: e.clientY };
-    const handle = this.selection && hitHandle(this.selection, p.x, p.y);
+  private onPointerDown(event: PointerEvent) {
+    if (this.textInput) return this.commitText(); // bấm chỗ khác = chốt chữ
+    const point = pointOf(event);
+    const handle = this.handleAt(point);
 
-    if (this.tool && handle === "move") this.startAnnotation(this.tool, p);
-    else if (handle) this.drag = { handle, start: p, orig: this.selection };
-    else if (this.canStartNewSelection()) this.drag = { handle: "new", start: p, orig: null };
+    if (this.tool && handle === "move") this.startAnnotation(this.tool, point);
+    else if (handle) this.drag = { handle, start: point, original: this.selection };
+    else if (this.canStartNewSelection()) this.drag = { handle: "new", start: point, original: null };
     else return;
-    this.canvas.setPointerCapture(e.pointerId);
+    this.canvas.setPointerCapture(event.pointerId);
   }
 
-  private onPointerMove(e: PointerEvent) {
-    const p = clampPoint({ x: e.clientX, y: e.clientY }, this.bounds);
-    if (this.drawing) return this.extendAnnotation(p);
-    if (this.drag) return this.dragSelection(this.drag, p);
-    this.canvas.style.cursor = this.cursorAt(p);
+  private onPointerMove(event: PointerEvent) {
+    const point = clampPoint(pointOf(event), this.bounds);
+    if (this.drawing) return this.extendAnnotation(point);
+    if (this.drag) return this.dragSelection(this.drag, point);
+    this.canvas.style.cursor = this.cursorAt(point);
   }
 
   private onPointerUp() {
@@ -123,43 +136,47 @@ export class Editor {
       if (this.drawing.points.length > 1) this.shapes.push(this.drawing);
       this.drawing = null;
     }
-    if (this.drag && this.selection) this.selection = settleSelection(this.selection, this.drag.orig);
+    if (this.drag && this.selection) this.selection = settleSelection(this.selection, this.drag.original);
     this.drag = null;
     this.render();
   }
 
-  /** Once something is drawn, clicking outside must not throw the work away. */
+  private handleAt(point: Point): Handle | null {
+    return this.selection && hitHandle(this.selection, point);
+  }
+
+  /** Đã vẽ gì đó thì click ra ngoài không được xoá mất công sức. */
   private canStartNewSelection(): boolean {
     return this.shapes.items.length === 0;
   }
 
-  private startAnnotation(tool: Tool, p: Point) {
+  private startAnnotation(tool: Tool, point: Point) {
     if (tool === "text") {
-      this.textInput = new TextInput(p, this.color, () => this.commitText(), () => this.cancelText());
+      this.textInput = new TextInput(point, this.color, () => this.commitText(), () => this.closeTextInput());
       return;
     }
-    this.drawing = newShape(tool, this.color, p);
+    this.drawing = newShape(tool, this.color, point);
   }
 
-  private extendAnnotation(p: Point) {
+  private extendAnnotation(point: Point) {
     const shape = this.drawing!;
-    if (FREEHAND_TOOLS.has(shape.tool)) shape.points.push(p);
-    else shape.points[1] = p;
+    if (FREEHAND_TOOLS.has(shape.tool)) shape.points.push(point);
+    else shape.points[1] = point;
     this.render();
   }
 
-  private dragSelection(d: SelectionDrag, p: Point) {
+  private dragSelection(drag: SelectionDrag, point: Point) {
     this.selection =
-      d.handle === "new"
-        ? normalizeRect(d.start.x, d.start.y, p.x, p.y)
-        : applyDrag(d.orig!, d.handle, p.x - d.start.x, p.y - d.start.y, this.bounds);
+      drag.handle === "new"
+        ? rectFromPoints(drag.start, point)
+        : applyDrag(drag.original!, drag.handle, delta(drag.start, point), this.bounds);
     this.render();
   }
 
-  private cursorAt(p: Point): string {
-    const handle = this.selection && hitHandle(this.selection, p.x, p.y);
-    if (!handle) return DEFAULT_CURSOR;
-    if (handle === "move" && this.tool) return this.tool === "text" ? TEXT_CURSOR : DEFAULT_CURSOR;
-    return HANDLE_CURSOR[handle];
+  private cursorAt(point: Point): string {
+    const handle = this.handleAt(point);
+    if (!handle) return CURSOR.default;
+    if (handle === "move" && this.tool) return this.tool === "text" ? CURSOR.text : CURSOR.default;
+    return CURSOR.handle[handle];
   }
 }

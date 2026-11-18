@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { displayAccelerator, toAccelerator } from "./accelerator";
+import { displayAccelerator, toAccelerator } from "../src/accelerator";
 
 const key = (code: string, mods: Partial<Record<"metaKey" | "ctrlKey" | "altKey" | "shiftKey", boolean>> = {}) => ({
   code,

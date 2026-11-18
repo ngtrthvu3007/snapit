@@ -89,6 +89,10 @@ sudo apt install build-essential curl libwebkit2gtk-4.1-dev libayatana-appindica
   libxrandr-dev libdbus-1-dev libgbm-dev
 ```
 
-`dev/preview.html` (open `http://localhost:1420/dev/preview.html` while `npm run dev` runs) runs the editor in a normal browser on a fake screenshot, useful for UI work without screen-capture permission.
+While `npm run dev` runs, two pages work in a normal browser without Tauri or screen-capture permission:
+`http://localhost:1420/dev/preview.html` (overlay editor on a fake 2× screenshot) and
+`http://localhost:1420/dev/settings-preview.html` (hotkey window, mocked backend; add `?wayland` for the Wayland view).
+
+Tests live in `tests/` (TypeScript, Vitest) and `src-tauri/src/tests/` (Rust).
 
 Manual test checklist: [docs/TESTING.md](docs/TESTING.md).

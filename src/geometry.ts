@@ -1,80 +1,79 @@
 import { EDGE_GRAB_TOLERANCE, MIN_SELECTION_SIZE } from "./constants";
 
 export type Point = { x: number; y: number };
-export type Rect = { x: number; y: number; w: number; h: number };
-/** Physical image pixels per CSS pixel, per axis (they can differ if the window isn't exactly the monitor's shape). */
+export type Rect = { x: number; y: number; width: number; height: number };
+/** Số pixel ảnh thật trên mỗi CSS pixel, tách theo từng trục. */
 export type Scale = { x: number; y: number };
 export type Edge = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw";
-/** What a pointer press on a selection grabs: one of its edges/corners, or the whole thing. */
+/** Thứ được nắm khi bấm lên vùng chọn: một cạnh/góc, hoặc cả vùng. */
 export type Handle = Edge | "move";
 
-export function normalizeRect(x1: number, y1: number, x2: number, y2: number): Rect {
-  return { x: Math.min(x1, x2), y: Math.min(y1, y2), w: Math.abs(x2 - x1), h: Math.abs(y2 - y1) };
-}
+type Edges = { left: number; top: number; right: number; bottom: number };
 
-export function isValidSelection(r: Rect): boolean {
-  return r.w >= MIN_SELECTION_SIZE && r.h >= MIN_SELECTION_SIZE;
-}
+const toEdges = (rect: Rect): Edges => ({ left: rect.x, top: rect.y, right: rect.x + rect.width, bottom: rect.y + rect.height });
 
-/** The selection after a drag ends: a too-small result falls back (to nothing, or to the pre-resize rect). */
-export function settleSelection(r: Rect, fallback: Rect | null): Rect | null {
-  return isValidSelection(r) ? r : fallback;
-}
+/** Dựng rect từ 4 cạnh bất kỳ thứ tự (kéo ngược vẫn ra rect dương). */
+const fromEdges = ({ left, top, right, bottom }: Edges): Rect => ({
+  x: Math.min(left, right),
+  y: Math.min(top, bottom),
+  width: Math.abs(right - left),
+  height: Math.abs(bottom - top),
+});
 
-export function clamp(v: number, lo: number, hi: number): number {
-  return Math.min(Math.max(v, lo), hi);
-}
+export const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
-export function clampPoint(p: Point, b: Rect): Point {
-  return { x: clamp(p.x, b.x, b.x + b.w), y: clamp(p.y, b.y, b.y + b.h) };
-}
+export const rectFromPoints = (start: Point, end: Point): Rect =>
+  fromEdges({ left: start.x, top: start.y, right: end.x, bottom: end.y });
 
-/** Edges are grabbable along their whole length, corners where two edges meet. */
-export function hitHandle(r: Rect, px: number, py: number, tol = EDGE_GRAB_TOLERANCE): Handle | null {
-  const near = (a: number, b: number) => Math.abs(a - b) <= tol;
-  const insideX = px >= r.x - tol && px <= r.x + r.w + tol;
-  const insideY = py >= r.y - tol && py <= r.y + r.h + tol;
+export const isValidSelection = (rect: Rect) => rect.width >= MIN_SELECTION_SIZE && rect.height >= MIN_SELECTION_SIZE;
+
+/** Vùng chọn sau khi kéo xong: quá nhỏ thì quay về `fallback` (không có, hoặc rect trước khi resize). */
+export const settleSelection = (rect: Rect, fallback: Rect | null) => (isValidSelection(rect) ? rect : fallback);
+
+export const clampPoint = (point: Point, bounds: Rect): Point => ({
+  x: clamp(point.x, bounds.x, bounds.x + bounds.width),
+  y: clamp(point.y, bounds.y, bounds.y + bounds.height),
+});
+
+/** Cạnh nắm được trên toàn bộ chiều dài, góc là nơi hai cạnh gặp nhau. */
+export function hitHandle(rect: Rect, point: Point, tolerance = EDGE_GRAB_TOLERANCE): Handle | null {
+  const edges = toEdges(rect);
+  const near = (value: number, edge: number) => Math.abs(value - edge) <= tolerance;
+  const insideX = point.x >= edges.left - tolerance && point.x <= edges.right + tolerance;
+  const insideY = point.y >= edges.top - tolerance && point.y <= edges.bottom + tolerance;
   if (!insideX || !insideY) return null;
 
-  const top = near(py, r.y);
-  const bottom = !top && near(py, r.y + r.h);
-  const left = near(px, r.x);
-  const right = !left && near(px, r.x + r.w);
-
-  if (top && left) return "nw";
-  if (top && right) return "ne";
-  if (bottom && left) return "sw";
-  if (bottom && right) return "se";
-  if (top) return "n";
-  if (bottom) return "s";
-  if (left) return "w";
-  if (right) return "e";
-  return "move";
+  const vertical = near(point.y, edges.top) ? "n" : near(point.y, edges.bottom) ? "s" : "";
+  const horizontal = near(point.x, edges.left) ? "w" : near(point.x, edges.right) ? "e" : "";
+  const edge = `${vertical}${horizontal}`;
+  return edge ? (edge as Edge) : "move";
 }
 
-/** Moves the rect, keeping it fully inside the bounds. */
-export function moveRect(r: Rect, dx: number, dy: number, b: Rect): Rect {
-  return { ...r, x: clamp(r.x + dx, b.x, b.x + b.w - r.w), y: clamp(r.y + dy, b.y, b.y + b.h - r.h) };
+/** Di chuyển rect, luôn giữ trọn trong bounds. */
+export const moveRect = (rect: Rect, delta: Point, bounds: Rect): Rect => ({
+  ...rect,
+  x: clamp(rect.x + delta.x, bounds.x, bounds.x + bounds.width - rect.width),
+  y: clamp(rect.y + delta.y, bounds.y, bounds.y + bounds.height - rect.height),
+});
+
+/** Kéo một cạnh/góc; kéo qua cạnh đối diện thì rect lật lại. Kết quả bị cắt trong bounds. */
+export function resizeRect(rect: Rect, edge: Edge, delta: Point, bounds: Rect): Rect {
+  const edges = toEdges(rect);
+  if (edge.includes("n")) edges.top += delta.y;
+  if (edge.includes("s")) edges.bottom += delta.y;
+  if (edge.includes("w")) edges.left += delta.x;
+  if (edge.includes("e")) edges.right += delta.x;
+  return intersect(fromEdges(edges), bounds);
 }
 
-/** Drags one edge/corner; dragging past the opposite edge flips the rect. Result is clipped to the bounds. */
-export function resizeRect(r: Rect, edge: Edge, dx: number, dy: number, b: Rect): Rect {
-  let [x1, y1, x2, y2] = [r.x, r.y, r.x + r.w, r.y + r.h];
-  if (edge.includes("n")) y1 += dy;
-  if (edge.includes("s")) y2 += dy;
-  if (edge.includes("w")) x1 += dx;
-  if (edge.includes("e")) x2 += dx;
-  return intersect(normalizeRect(x1, y1, x2, y2), b);
-}
-
-export function applyDrag(r: Rect, handle: Handle, dx: number, dy: number, b: Rect): Rect {
-  return handle === "move" ? moveRect(r, dx, dy, b) : resizeRect(r, handle, dx, dy, b);
-}
+export const applyDrag = (rect: Rect, handle: Handle, delta: Point, bounds: Rect) =>
+  handle === "move" ? moveRect(rect, delta, bounds) : resizeRect(rect, handle, delta, bounds);
 
 function intersect(a: Rect, b: Rect): Rect {
-  const left = Math.max(a.x, b.x);
-  const top = Math.max(a.y, b.y);
-  const right = Math.min(a.x + a.w, b.x + b.w);
-  const bottom = Math.min(a.y + a.h, b.y + b.h);
-  return { x: left, y: top, w: Math.max(0, right - left), h: Math.max(0, bottom - top) };
+  const [first, second] = [toEdges(a), toEdges(b)];
+  const left = Math.max(first.left, second.left);
+  const top = Math.max(first.top, second.top);
+  const right = Math.max(left, Math.min(first.right, second.right));
+  const bottom = Math.max(top, Math.min(first.bottom, second.bottom));
+  return fromEdges({ left, top, right, bottom });
 }

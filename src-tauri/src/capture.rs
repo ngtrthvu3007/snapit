@@ -1,23 +1,27 @@
 use std::{
     sync::{
-        Mutex,
+        Mutex, MutexGuard,
         atomic::{AtomicBool, Ordering},
     },
     time::Instant,
 };
 
 use image::{
-    ExtendedColorType, ImageEncoder,
+    ExtendedColorType, ImageEncoder, RgbaImage,
     codecs::png::{CompressionType, FilterType, PngEncoder},
 };
 use tauri::{AppHandle, Manager};
 
-use crate::{dialog::show_error, overlay};
+use crate::{
+    dialog::{show_error, to_message},
+    overlay,
+};
 
 const PERMISSION_MESSAGE: &str = "Snapit needs Screen Recording permission. Enable it in System Settings → \
      Privacy & Security → Screen Recording, then restart Snapit.";
+const NO_MONITORS_MESSAGE: &str = "No screen found to capture.";
 
-/// One monitor's frozen image. Geometry is logical (points); `png` is physical pixels.
+/// Ảnh đóng băng của một màn hình. Toạ độ là logical (point); `png` là pixel thật.
 pub struct Shot {
     pub x: i32,
     pub y: i32,
@@ -26,11 +30,26 @@ pub struct Shot {
     pub png: Vec<u8>,
 }
 
-/// The current capture, one shot per monitor; empty when no overlay is open.
+/// Lần chụp hiện tại, mỗi màn hình một ảnh; rỗng khi không có overlay nào.
 #[derive(Default)]
-pub struct Shots(pub Mutex<Vec<Shot>>);
+pub struct Shots(Mutex<Vec<Shot>>);
 
-/// Held from the hotkey press until the overlays close, so a second press doesn't stack captures.
+impl Shots {
+    pub fn lock(&self) -> MutexGuard<'_, Vec<Shot>> {
+        self.0.lock().expect("shots mutex poisoned")
+    }
+    pub fn replace(&self, shots: Vec<Shot>) {
+        *self.lock() = shots;
+    }
+    pub fn clear(&self) {
+        self.lock().clear();
+    }
+    pub fn png(&self, index: usize) -> Option<Vec<u8>> {
+        self.lock().get(index).map(|shot| shot.png.clone())
+    }
+}
+
+/// Giữ từ lúc bấm phím tới khi overlay đóng, để bấm lần nữa không chụp chồng.
 #[derive(Default)]
 pub struct CaptureGuard(AtomicBool);
 
@@ -43,7 +62,7 @@ impl CaptureGuard {
     }
 }
 
-/// Captures every monitor off the main thread, then opens the overlays on it.
+/// Chụp mọi màn hình ở luồng phụ, rồi mở overlay trên luồng chính.
 pub fn trigger(app: &AppHandle) {
     if !app.state::<CaptureGuard>().try_begin() {
         return;
@@ -53,60 +72,59 @@ pub fn trigger(app: &AppHandle) {
         let started = Instant::now();
         let shots = match capture_all() {
             Ok(shots) => shots,
-            Err(e) => {
-                app.state::<CaptureGuard>().end();
-                return show_error(&app, &e);
-            }
+            Err(message) => return fail(&app, &message),
         };
         eprintln!("captured {} monitor(s) in {:?}", shots.len(), started.elapsed());
-        *app.state::<Shots>().0.lock().unwrap() = shots;
-        let handle = app.clone();
-        let opened = app.run_on_main_thread(move || {
-            if let Err(e) = overlay::open_overlays(&handle) {
-                overlay::close_overlays(handle.clone());
-                show_error(&handle, &e.to_string());
+        app.state::<Shots>().replace(shots);
+        let main_thread_app = app.clone();
+        let scheduled = app.run_on_main_thread(move || {
+            if let Err(error) = overlay::open_overlays(&main_thread_app) {
+                overlay::close_overlays(main_thread_app.clone());
+                show_error(&main_thread_app, &to_message(error));
             }
         });
-        if let Err(e) = opened {
-            overlay::release_capture(&app);
-            show_error(&app, &e.to_string());
+        if let Err(error) = scheduled {
+            fail(&app, &to_message(error));
         }
     });
 }
 
-const NO_MONITORS_MESSAGE: &str = "No screen found to capture.";
+/// Huỷ lần chụp đang dở và báo lỗi.
+fn fail(app: &AppHandle, message: &str) {
+    overlay::release_capture(app);
+    show_error(app, message);
+}
 
-fn require_monitors(shots: Vec<Shot>) -> Result<Vec<Shot>, String> {
+/// Không có màn hình nào thì không overlay nào mở, lần chụp sẽ kẹt mãi → coi là lỗi.
+pub(crate) fn require_monitors(shots: Vec<Shot>) -> Result<Vec<Shot>, String> {
     if shots.is_empty() { Err(NO_MONITORS_MESSAGE.into()) } else { Ok(shots) }
 }
 
 fn capture_all() -> Result<Vec<Shot>, String> {
     ensure_permission()?;
-    let err = |e: xcap::XCapError| e.to_string();
-    // ponytail: on Wayland xcap calls the portal once per monitor; capture once + crop if that shows N dialogs
+    // ponytail: trên Wayland xcap gọi portal mỗi màn hình một lần; nếu hiện N hộp thoại thì chụp 1 lần rồi cắt
     let shots = xcap::Monitor::all()
-        .map_err(err)?
+        .map_err(to_message)?
         .iter()
-        .map(|m| {
-            let img = m.capture_image().map_err(err)?;
+        .map(|monitor| {
             Ok(Shot {
-                x: m.x().map_err(err)?,
-                y: m.y().map_err(err)?,
-                width: m.width().map_err(err)?,
-                height: m.height().map_err(err)?,
-                png: encode_png_fast(&img)?,
+                x: monitor.x().map_err(to_message)?,
+                y: monitor.y().map_err(to_message)?,
+                width: monitor.width().map_err(to_message)?,
+                height: monitor.height().map_err(to_message)?,
+                png: encode_png_fast(&monitor.capture_image().map_err(to_message)?)?,
             })
         })
         .collect::<Result<Vec<_>, String>>()?;
     require_monitors(shots)
 }
 
-/// Speed over size: the PNG only travels to our own webview.
-fn encode_png_fast(img: &image::RgbaImage) -> Result<Vec<u8>, String> {
+/// Ưu tiên tốc độ hơn dung lượng: PNG chỉ đi tới webview của chính app.
+fn encode_png_fast(image: &RgbaImage) -> Result<Vec<u8>, String> {
     let mut png = Vec::new();
     PngEncoder::new_with_quality(&mut png, CompressionType::Fast, FilterType::NoFilter)
-        .write_image(img, img.width(), img.height(), ExtendedColorType::Rgba8)
-        .map_err(|e| e.to_string())?;
+        .write_image(image, image.width(), image.height(), ExtendedColorType::Rgba8)
+        .map_err(to_message)?;
     Ok(png)
 }
 
@@ -119,6 +137,7 @@ unsafe extern "C" {
 
 fn ensure_permission() -> Result<(), String> {
     #[cfg(target_os = "macos")]
+    // SAFETY: hai hàm CoreGraphics không tham số, gọi được ở mọi luồng
     unsafe {
         if !CGPreflightScreenCaptureAccess() {
             CGRequestScreenCaptureAccess();
@@ -126,26 +145,4 @@ fn ensure_permission() -> Result<(), String> {
         }
     }
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn guard_rejects_second_capture_until_end() {
-        let g = CaptureGuard::default();
-        assert!(g.try_begin());
-        assert!(!g.try_begin());
-        g.end();
-        assert!(g.try_begin());
-    }
-
-    #[test]
-    fn no_monitors_is_an_error() {
-        // otherwise no overlay opens and the guard is never released
-        assert!(require_monitors(Vec::new()).is_err());
-        let one = vec![Shot { x: 0, y: 0, width: 1, height: 1, png: Vec::new() }];
-        assert_eq!(require_monitors(one).unwrap().len(), 1);
-    }
 }

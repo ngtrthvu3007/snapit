@@ -1,96 +1,85 @@
-import { PALETTE, TOOLBAR_GAP, TOOLS } from "./constants";
+import { ACTION_ICON, PALETTE, TOOLBAR_GAP, TOOLS } from "./constants";
+import { CLASS, createElement, ID } from "./dom";
 import type { Editor } from "./editor";
 import { clamp, type Rect } from "./geometry";
+import { COMMAND_KEY_LABEL } from "./keyboard";
 
-type Size = { w: number; h: number };
+type Size = { width: number; height: number };
 export type ToolbarActions = { copy: () => void; save: () => void; close: () => void };
 
-const MOD_KEY_LABEL = navigator.platform.startsWith("Mac") ? "⌘" : "Ctrl+";
-
-/** Below the selection, right-aligned; above it if no room; inside its bottom if neither fits. */
-export function toolbarPosition(sel: Rect, bar: Size, view: Size): { left: number; top: number } {
-  let top = sel.y + sel.h + TOOLBAR_GAP;
-  if (top + bar.h > view.h) top = sel.y - bar.h - TOOLBAR_GAP;
-  if (top < 0) top = sel.y + sel.h - bar.h - TOOLBAR_GAP;
-  const left = clamp(sel.x + sel.w - bar.w, 0, view.w - bar.w);
+/** Dưới vùng chọn, canh phải; hết chỗ thì lên trên; vẫn không đủ thì nằm trong đáy vùng chọn. */
+export function toolbarPosition(selection: Rect, toolbar: Size, viewport: Size): { left: number; top: number } {
+  let top = selection.y + selection.height + TOOLBAR_GAP;
+  if (top + toolbar.height > viewport.height) top = selection.y - toolbar.height - TOOLBAR_GAP;
+  if (top < 0) top = selection.y + selection.height - toolbar.height - TOOLBAR_GAP;
+  const left = clamp(selection.x + selection.width - toolbar.width, 0, viewport.width - toolbar.width);
   return { left, top };
 }
 
 export function mountToolbar(editor: Editor, actions: ToolbarActions) {
-  const bar = document.createElement("div");
-  bar.id = "toolbar";
+  const toolbar = createElement("div", { id: ID.toolbar });
+  const addButton = (icon: string, title: string, onClick: () => void) => {
+    const button = createElement("button", { text: icon, title });
+    button.addEventListener("click", onClick);
+    toolbar.append(button);
+    return button;
+  };
+  const addSeparator = () => toolbar.append(createElement("span", { className: CLASS.separator }));
 
   const toolButtons = TOOLS.map(({ tool, icon, name }) => {
-    const b = button(bar, icon, name, () => {
+    const button = addButton(icon, name, () => {
       editor.tool = editor.tool === tool ? null : tool;
-      sync();
+      syncActive();
     });
-    b.dataset.tool = tool;
-    return b;
+    button.dataset.tool = tool;
+    return button;
   });
-  separator(bar);
+  addSeparator();
 
   const swatches = PALETTE.map((color) => {
-    const b = button(bar, "", color, () => setColor(color));
-    b.className = "swatch";
-    b.style.background = color;
-    return b;
+    const swatch = addButton("", color, () => setColor(color));
+    swatch.classList.add(CLASS.swatch);
+    swatch.style.background = color;
+    return swatch;
   });
-  const custom = document.createElement("input");
-  custom.type = "color";
-  custom.value = editor.color;
-  custom.title = "Custom color";
-  custom.setAttribute("aria-label", custom.title);
-  custom.addEventListener("input", () => setColor(custom.value));
-  bar.append(custom);
-  separator(bar);
+  const customColor = createElement("input", { title: "Custom color" });
+  customColor.type = "color";
+  customColor.value = editor.color;
+  customColor.addEventListener("input", () => setColor(customColor.value));
+  toolbar.append(customColor);
+  addSeparator();
 
-  button(bar, "↶", `Undo (${MOD_KEY_LABEL}Z)`, () => editor.undo());
-  button(bar, "⧉", `Copy (${MOD_KEY_LABEL}C)`, actions.copy);
-  button(bar, "⤓", `Save (${MOD_KEY_LABEL}S)`, actions.save);
-  button(bar, "✕", "Close (Esc)", actions.close);
-  document.body.append(bar);
+  addButton(ACTION_ICON.undo, `Undo (${COMMAND_KEY_LABEL}Z)`, () => editor.undo());
+  addButton(ACTION_ICON.copy, `Copy (${COMMAND_KEY_LABEL}C)`, actions.copy);
+  addButton(ACTION_ICON.save, `Save (${COMMAND_KEY_LABEL}S)`, actions.save);
+  addButton(ACTION_ICON.close, "Close (Esc)", actions.close);
+  document.body.append(toolbar);
 
   function setColor(color: string) {
     editor.color = color;
-    custom.value = color;
-    sync();
+    customColor.value = color;
+    syncActive();
   }
 
-  function sync() {
-    for (const b of toolButtons) b.classList.toggle("active", b.dataset.tool === editor.tool);
-    for (const b of swatches) b.classList.toggle("active", b.title === editor.color);
+  function syncActive() {
+    for (const button of toolButtons) button.classList.toggle(CLASS.active, button.dataset.tool === editor.tool);
+    for (const swatch of swatches) swatch.classList.toggle(CLASS.active, swatch.title === editor.color);
   }
 
   function place() {
-    const sel = editor.selection;
-    bar.hidden = !sel || editor.adjusting;
-    if (!sel || bar.hidden) return;
-    const { left, top } = toolbarPosition(sel, { w: bar.offsetWidth, h: bar.offsetHeight }, { w: innerWidth, h: innerHeight });
-    bar.style.transform = `translate(${left}px, ${top}px)`;
+    const selection = editor.selection;
+    toolbar.hidden = !selection || editor.adjusting;
+    if (!selection || toolbar.hidden) return;
+    const size = { width: toolbar.offsetWidth, height: toolbar.offsetHeight };
+    const { left, top } = toolbarPosition(selection, size, { width: innerWidth, height: innerHeight });
+    toolbar.style.transform = `translate(${left}px, ${top}px)`;
   }
 
-  const previous = editor.onChange;
+  const previousOnChange = editor.onChange;
   editor.onChange = () => {
-    previous();
+    previousOnChange();
     place();
   };
-  sync();
+  syncActive();
   place();
-}
-
-function button(parent: HTMLElement, label: string, title: string, onClick: () => void): HTMLButtonElement {
-  const b = document.createElement("button");
-  b.textContent = label;
-  b.title = title;
-  b.setAttribute("aria-label", title);
-  b.addEventListener("click", onClick);
-  parent.append(b);
-  return b;
-}
-
-function separator(parent: HTMLElement) {
-  const s = document.createElement("span");
-  s.className = "sep";
-  parent.append(s);
 }

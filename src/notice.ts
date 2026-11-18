@@ -1,18 +1,14 @@
 import { NOTICE_DURATION_MS } from "./constants";
+import { ensureElement, ID } from "./dom";
 
-let timer: ReturnType<typeof setTimeout> | undefined;
+let hideTimer: ReturnType<typeof setTimeout> | undefined;
 
-/** Error message shown inside the overlay (native dialogs would sit behind it). */
+/** Báo lỗi ngay trong overlay (hộp thoại hệ thống sẽ bị overlay che mất). */
 export function showNotice(message: string) {
-  let el = document.getElementById("notice");
-  if (!el) {
-    el = document.createElement("div");
-    el.id = "notice";
-    el.setAttribute("role", "alert");
-    document.body.append(el);
-  }
-  el.textContent = message;
-  el.hidden = false;
-  clearTimeout(timer);
-  timer = setTimeout(() => (el.hidden = true), NOTICE_DURATION_MS);
+  const notice = ensureElement("div", ID.notice);
+  notice.setAttribute("role", "alert");
+  notice.textContent = message;
+  notice.hidden = false;
+  clearTimeout(hideTimer);
+  hideTimer = setTimeout(() => (notice.hidden = true), NOTICE_DURATION_MS);
 }

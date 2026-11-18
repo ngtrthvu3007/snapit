@@ -1,29 +1,40 @@
 import { ARROW_HEAD, MARKER_ALPHA, TEXT, TOOL_WIDTH } from "./constants";
 import type { Point } from "./geometry";
 
-export type { Point };
 export type Tool = "pen" | "line" | "arrow" | "rect" | "marker" | "text";
-/** Coordinates in CSS px of the overlay window. For text, `width` is the font size. */
+/** Toạ độ theo CSS px của cửa sổ overlay. Với text, `width` là cỡ chữ. */
 export type Shape = { tool: Tool; color: string; width: number; points: Point[]; text?: string };
 
-/** Tools that record every pointer position; the others keep only start and end. */
+/** Công cụ ghi mọi điểm con trỏ đi qua; các công cụ khác chỉ giữ điểm đầu và cuối. */
 export const FREEHAND_TOOLS: ReadonlySet<Tool> = new Set(["pen", "marker"]);
 
-export function newShape(tool: Tool, color: string, at: Point): Shape {
-  return { tool, color, width: TOOL_WIDTH[tool], points: [at] };
-}
+export const newShape = (tool: Tool, color: string, start: Point): Shape => ({
+  tool,
+  color,
+  width: TOOL_WIDTH[tool],
+  points: [start],
+});
 
-export function arrowHead(from: Point, to: Point, size: number): [Point, Point] {
-  const a = Math.atan2(to.y - from.y, to.x - from.x);
-  const wing = (d: number) => ({ x: to.x - size * Math.cos(a + d), y: to.y - size * Math.sin(a + d) });
+/** Chữ rỗng (hoặc chỉ khoảng trắng) không tạo hình. */
+export const textShape = (text: string, position: Point, color: string): Shape | null =>
+  text.trim() ? { ...newShape("text", color, position), text } : null;
+
+/** Hai đầu cánh của mũi tên tại `tip`. */
+export function arrowHead(tail: Point, tip: Point, size: number): [Point, Point] {
+  const shaftAngle = Math.atan2(tip.y - tail.y, tip.x - tail.x);
+  const wing = (offset: number) => ({
+    x: tip.x - size * Math.cos(shaftAngle + offset),
+    y: tip.y - size * Math.sin(shaftAngle + offset),
+  });
   return [wing(ARROW_HEAD.angle), wing(-ARROW_HEAD.angle)];
 }
 
+/** Danh sách hình đã vẽ, có undo. */
 export function newShapeStack() {
   return {
     items: [] as Shape[],
-    push(s: Shape) {
-      this.items.push(s);
+    push(shape: Shape) {
+      this.items.push(shape);
     },
     undo() {
       this.items.pop();
@@ -31,54 +42,55 @@ export function newShapeStack() {
   };
 }
 
-export function textShape(text: string, at: Point, color: string): Shape | null {
-  return text.trim() ? { tool: "text", color, width: TOOL_WIDTH.text, points: [at], text } : null;
+// ── Vẽ ────────────────────────────────────────────────────
+
+type DrawFunction = (context: CanvasRenderingContext2D, shape: Shape, start: Point, end: Point) => void;
+
+function tracePath(context: CanvasRenderingContext2D, points: Point[]) {
+  context.beginPath();
+  points.forEach((point, index) => (index === 0 ? context.moveTo(point.x, point.y) : context.lineTo(point.x, point.y)));
 }
 
-type Draw = (ctx: CanvasRenderingContext2D, s: Shape, first: Point, last: Point) => void;
-
-function strokePath(ctx: CanvasRenderingContext2D, points: Point[]) {
-  ctx.beginPath();
-  points.forEach((q, i) => (i === 0 ? ctx.moveTo(q.x, q.y) : ctx.lineTo(q.x, q.y)));
-  ctx.stroke();
+function strokePath(context: CanvasRenderingContext2D, points: Point[]) {
+  tracePath(context, points);
+  context.stroke();
 }
 
-const DRAW: Record<Tool, Draw> = {
-  pen: (ctx, s) => strokePath(ctx, s.points),
-  marker: (ctx, s) => {
-    ctx.globalAlpha = MARKER_ALPHA;
-    ctx.lineCap = "butt";
-    strokePath(ctx, s.points);
+function fillPolygon(context: CanvasRenderingContext2D, points: Point[]) {
+  tracePath(context, points);
+  context.closePath();
+  context.fill();
+}
+
+const DRAW: Record<Tool, DrawFunction> = {
+  pen: (context, shape) => strokePath(context, shape.points),
+  marker: (context, shape) => {
+    context.globalAlpha = MARKER_ALPHA;
+    context.lineCap = "butt";
+    strokePath(context, shape.points);
   },
-  line: (ctx, _s, first, last) => strokePath(ctx, [first, last]),
-  arrow: (ctx, s, first, last) => {
-    strokePath(ctx, [first, last]);
-    const [a, b] = arrowHead(first, last, Math.max(ARROW_HEAD.minSize, s.width * ARROW_HEAD.sizePerStrokeWidth));
-    ctx.beginPath();
-    ctx.moveTo(last.x, last.y);
-    ctx.lineTo(a.x, a.y);
-    ctx.lineTo(b.x, b.y);
-    ctx.closePath();
-    ctx.fill();
+  line: (context, _shape, start, end) => strokePath(context, [start, end]),
+  arrow: (context, shape, start, end) => {
+    strokePath(context, [start, end]);
+    const size = Math.max(ARROW_HEAD.minSize, shape.width * ARROW_HEAD.sizePerStrokeWidth);
+    fillPolygon(context, [end, ...arrowHead(start, end, size)]);
   },
-  rect: (ctx, _s, first, last) => {
-    const r = { x: Math.min(first.x, last.x), y: Math.min(first.y, last.y) };
-    ctx.strokeRect(r.x, r.y, Math.abs(last.x - first.x), Math.abs(last.y - first.y));
-  },
-  text: (ctx, s, first) => {
-    ctx.font = `${s.width}px ${TEXT.fontFamily}`;
-    ctx.textBaseline = "top";
-    const lineHeight = s.width * TEXT.lineHeight;
-    (s.text ?? "").split("\n").forEach((line, i) => ctx.fillText(line, first.x, first.y + i * lineHeight));
+  rect: (context, _shape, start, end) =>
+    context.strokeRect(Math.min(start.x, end.x), Math.min(start.y, end.y), Math.abs(end.x - start.x), Math.abs(end.y - start.y)),
+  text: (context, shape, start) => {
+    context.font = `${shape.width}px ${TEXT.fontFamily}`;
+    context.textBaseline = "top";
+    const lineHeight = shape.width * TEXT.lineHeight;
+    (shape.text ?? "").split("\n").forEach((line, index) => context.fillText(line, start.x, start.y + index * lineHeight));
   },
 };
 
-/** Draws in the context's current coordinate space; callers scale the context for export. */
-export function drawShape(ctx: CanvasRenderingContext2D, s: Shape) {
-  ctx.save();
-  ctx.strokeStyle = ctx.fillStyle = s.color;
-  ctx.lineWidth = s.width;
-  ctx.lineCap = ctx.lineJoin = "round";
-  DRAW[s.tool](ctx, s, s.points[0], s.points[s.points.length - 1]);
-  ctx.restore();
+/** Vẽ trong hệ toạ độ hiện tại của context; khi xuất ảnh, caller scale context. */
+export function drawShape(context: CanvasRenderingContext2D, shape: Shape) {
+  context.save();
+  context.strokeStyle = context.fillStyle = shape.color;
+  context.lineWidth = shape.width;
+  context.lineCap = context.lineJoin = "round";
+  DRAW[shape.tool](context, shape, shape.points[0], shape.points[shape.points.length - 1]);
+  context.restore();
 }

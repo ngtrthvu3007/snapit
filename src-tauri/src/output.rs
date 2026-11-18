@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use chrono::{Datelike, Local, Timelike};
+use chrono::{Local, NaiveDateTime};
 use tauri::{
     AppHandle, Manager,
     image::Image,
@@ -9,28 +9,31 @@ use tauri::{
 use tauri_plugin_clipboard_manager::ClipboardExt;
 use tauri_plugin_dialog::DialogExt;
 
-use crate::overlay::{close_overlays, hide_overlays, show_overlays};
+use crate::{
+    dialog::to_message,
+    overlay::{close_overlays, hide_overlays, show_overlays},
+};
 
 const PNG_FILTER_NAME: &str = "PNG";
 const PNG_EXTENSION: &str = "png";
+const FILENAME_FORMAT: &str = "Snapit_%Y-%m-%d_%H-%M-%S.png";
 const BAD_BODY_MESSAGE: &str = "expected PNG bytes";
 
-pub fn default_filename(y: i32, mo: u8, d: u8, h: u8, mi: u8, s: u8) -> String {
-    format!("Snapit_{y:04}-{mo:02}-{d:02}_{h:02}-{mi:02}-{s:02}.png")
+pub fn default_filename(time: NaiveDateTime) -> String {
+    time.format(FILENAME_FORMAT).to_string()
 }
 
-/// The PNG sent by the page: a raw body normally, a JSON byte array if Tauri fell back to postMessage IPC.
-fn png_body(body: &InvokeBody) -> Result<Vec<u8>, String> {
+/// PNG trang gửi lên: thường là raw body, là mảng byte JSON nếu Tauri phải dùng postMessage.
+pub(crate) fn png_body(body: &InvokeBody) -> Result<Vec<u8>, String> {
     match body {
         InvokeBody::Raw(bytes) => Ok(bytes.clone()),
         InvokeBody::Json(value) => serde_json::from_value(value.clone()).map_err(|_| BAD_BODY_MESSAGE.into()),
     }
 }
 
-/// The GTK save dialog doesn't add the extension; "foo" must still become "foo.png".
-fn with_png_extension(path: PathBuf) -> PathBuf {
-    let has_png = path.extension().is_some_and(|e| e.eq_ignore_ascii_case(PNG_EXTENSION));
-    if has_png {
+/// Hộp thoại lưu của GTK không tự thêm đuôi; "foo" vẫn phải thành "foo.png".
+pub(crate) fn with_png_extension(path: PathBuf) -> PathBuf {
+    if path.extension().is_some_and(|extension| extension.eq_ignore_ascii_case(PNG_EXTENSION)) {
         return path;
     }
     let mut name = path.into_os_string();
@@ -39,36 +42,23 @@ fn with_png_extension(path: PathBuf) -> PathBuf {
     name.into()
 }
 
-fn now_filename() -> String {
-    let now = Local::now();
-    default_filename(
-        now.year(),
-        now.month() as u8,
-        now.day() as u8,
-        now.hour() as u8,
-        now.minute() as u8,
-        now.second() as u8,
-    )
-}
-
-/// Copies the PNG to the clipboard and closes the overlays. On failure the overlays stay open and
-/// the page shows the error (a native dialog would be hidden behind them).
-/// async → runs off the main thread.
+/// Copy PNG vào clipboard rồi đóng overlay. Lỗi thì overlay vẫn mở và trang tự báo lỗi
+/// (hộp thoại hệ thống sẽ bị overlay che). async → chạy ngoài luồng chính.
 #[tauri::command]
 pub async fn copy_png(app: AppHandle, request: Request<'_>) -> Result<(), String> {
     let png = png_body(request.body())?;
-    let img = image::load_from_memory(&png).map_err(|e| e.to_string())?.into_rgba8();
-    let (w, h) = img.dimensions();
+    let image = image::load_from_memory(&png).map_err(to_message)?.into_rgba8();
+    let (width, height) = image.dimensions();
     app.clipboard()
-        .write_image(&Image::new_owned(img.into_raw(), w, h))
-        .map_err(|e| format!("Copy failed: {e}"))?;
+        .write_image(&Image::new_owned(image.into_raw(), width, height))
+        .map_err(|error| format!("Copy failed: {error}"))?;
     close_overlays(app);
     Ok(())
 }
 
-/// Hides the overlays (they'd cover the dialog), asks where to save, writes the file.
-/// Success closes the overlays; cancel or failure brings them back with the work intact.
-/// Returns false when the user cancels.
+/// Ẩn overlay (để không che hộp thoại), hỏi nơi lưu, ghi file.
+/// Lưu xong thì đóng overlay; huỷ hoặc lỗi thì hiện lại overlay, giữ nguyên hình vẽ.
+/// Trả về false khi người dùng huỷ.
 #[tauri::command]
 pub async fn save_png(app: AppHandle, request: Request<'_>) -> Result<bool, String> {
     let png = png_body(request.body())?;
@@ -82,38 +72,16 @@ pub async fn save_png(app: AppHandle, request: Request<'_>) -> Result<bool, Stri
 }
 
 fn ask_and_write(app: &AppHandle, png: &[u8]) -> Result<bool, String> {
-    let mut dialog = app.dialog().file().set_file_name(now_filename()).add_filter(PNG_FILTER_NAME, &[PNG_EXTENSION]);
-    if let Ok(dir) = app.path().picture_dir() {
-        dialog = dialog.set_directory(dir);
+    let mut dialog = app
+        .dialog()
+        .file()
+        .set_file_name(default_filename(Local::now().naive_local()))
+        .add_filter(PNG_FILTER_NAME, &[PNG_EXTENSION]);
+    if let Ok(pictures) = app.path().picture_dir() {
+        dialog = dialog.set_directory(pictures);
     }
     let Some(picked) = dialog.blocking_save_file() else { return Ok(false) };
-    let path = with_png_extension(picked.into_path().map_err(|e| e.to_string())?);
-    std::fs::write(&path, png).map_err(|e| format!("Could not save {}: {e}", path.display()))?;
+    let path = with_png_extension(picked.into_path().map_err(to_message)?);
+    std::fs::write(&path, png).map_err(|error| format!("Could not save {}: {error}", path.display()))?;
     Ok(true)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn filename_format() {
-        assert_eq!(default_filename(2026, 11, 18, 9, 5, 7), "Snapit_2026-11-18_09-05-07.png");
-    }
-
-    #[test]
-    fn png_extension_added_when_missing() {
-        use std::path::PathBuf;
-        assert_eq!(with_png_extension(PathBuf::from("/tmp/foo")), PathBuf::from("/tmp/foo.png"));
-        assert_eq!(with_png_extension(PathBuf::from("/tmp/foo.png")), PathBuf::from("/tmp/foo.png"));
-        assert_eq!(with_png_extension(PathBuf::from("/tmp/foo.PNG")), PathBuf::from("/tmp/foo.PNG"));
-        assert_eq!(with_png_extension(PathBuf::from("/tmp/v1.2")), PathBuf::from("/tmp/v1.2.png"));
-    }
-
-    #[test]
-    fn png_body_accepts_raw_and_json_array() {
-        assert_eq!(png_body(&InvokeBody::Raw(vec![1, 2, 3])).unwrap(), vec![1, 2, 3]);
-        assert_eq!(png_body(&InvokeBody::Json(serde_json::json!([1, 2, 3]))).unwrap(), vec![1, 2, 3]);
-        assert!(png_body(&InvokeBody::Json(serde_json::json!({"a": 1}))).is_err());
-    }
 }

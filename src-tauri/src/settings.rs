@@ -6,9 +6,10 @@ const LABEL: &str = "settings";
 const PAGE: &str = "settings.html";
 const TITLE: &str = "Snapit – Capture hotkey";
 const WIDTH: f64 = 400.0;
+/// Đủ cho cả phần hướng dẫn Wayland (dài hơn phần ghi phím).
 const HEIGHT: f64 = 280.0;
 
-/// Opens (or focuses) the hotkey settings window. The capture hotkey is paused while it's open.
+/// Mở (hoặc focus) cửa sổ đổi phím chụp. Phím chụp tạm tắt khi cửa sổ đang mở.
 pub fn open(app: &AppHandle) -> tauri::Result<()> {
     if let Some(window) = app.get_webview_window(LABEL) {
         return window.set_focus();

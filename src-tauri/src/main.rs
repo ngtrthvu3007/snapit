@@ -1,4 +1,4 @@
-// Prevents additional console window on Windows in release, DO NOT REMOVE!!
+// Ẩn cửa sổ console thừa trên Windows ở bản release, KHÔNG XOÁ
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {

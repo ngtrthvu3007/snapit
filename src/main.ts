@@ -1,35 +1,36 @@
+// Trang overlay: một cửa sổ cho mỗi màn hình, hiện ảnh đóng băng để chọn vùng và vẽ.
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { SHORTCUT_CODES } from "./constants";
 import { Editor } from "./editor";
 import { composeExport } from "./export";
 import { closeOverlays, copyPng, monitorFromLabel, savePng, shotUrl } from "./ipc";
+import { hasCommandKey, KEY } from "./keyboard";
 import { showNotice } from "./notice";
 import { mountToolbar } from "./toolbar";
 
-const win = getCurrentWindow();
+const overlayWindow = getCurrentWindow();
 
-/** Loads the frozen screenshot and sets up the editor; the window stays hidden until this succeeds. */
-async function boot(): Promise<Editor> {
-  const img = new Image();
-  img.crossOrigin = "anonymous"; // keep the export canvas untainted
-  img.src = shotUrl(monitorFromLabel(win.label));
-  await img.decode();
+/** Tải ảnh đóng băng và dựng editor; cửa sổ vẫn ẩn cho tới khi xong. */
+async function createEditor(): Promise<Editor> {
+  const image = new Image();
+  image.crossOrigin = "anonymous"; // để canvas xuất ảnh không bị "tainted"
+  image.src = shotUrl(monitorFromLabel(overlayWindow.label));
+  await image.decode();
   const canvas = document.createElement("canvas");
   document.body.append(canvas);
-  return new Editor(canvas, img);
+  return new Editor(canvas, image);
 }
 
 let busy = false;
-/** Copy/save are ignored while one is already running (double click, key repeat). */
+/** Bỏ qua copy/save khi đang có một lệnh chạy (bấm đúp, giữ phím). */
 async function exportSelection(send: (png: Uint8Array) => Promise<unknown>) {
   if (busy || !editor.selection) return;
   busy = true;
   try {
     editor.commitText();
-    const png = await composeExport(editor.img, editor.selection, editor.shapes.items, editor.scale);
-    await send(png);
-  } catch (e) {
-    showNotice(String(e));
+    await send(await composeExport(editor.image, editor.selection, editor.shapes.items, editor.scale));
+  } catch (error) {
+    showNotice(String(error));
   } finally {
     busy = false;
   }
@@ -39,26 +40,27 @@ const save = () => exportSelection(savePng);
 
 let editor: Editor;
 try {
-  editor = await boot();
+  editor = await createEditor();
   mountToolbar(editor, { copy, save, close: closeOverlays });
-  await win.show();
-  await win.setFocus();
-} catch (e) {
-  // an invisible overlay would hold the capture forever; give up so the next hotkey works
-  console.error("overlay failed to start", e);
+  await overlayWindow.show();
+  await overlayWindow.setFocus();
+} catch (error) {
+  // overlay vô hình sẽ giữ lần chụp mãi mãi → bỏ cuộc để phím tắt dùng lại được
+  console.error("overlay failed to start", error);
   await closeOverlays();
-  throw e;
+  throw error;
 }
 
-const SHORTCUTS: Record<string, () => unknown> = {
+/** Phím tắt dùng kèm ⌘ / Ctrl. */
+const COMMAND_SHORTCUTS: Record<string, () => unknown> = {
   [SHORTCUT_CODES.copy]: copy,
   [SHORTCUT_CODES.save]: save,
   [SHORTCUT_CODES.undo]: () => editor.undo(),
 };
 
-addEventListener("keydown", (e) => {
-  const action = e.key === "Escape" ? closeOverlays : (e.metaKey || e.ctrlKey) && SHORTCUTS[e.code];
+addEventListener("keydown", (event) => {
+  const action = event.key === KEY.escape ? closeOverlays : hasCommandKey(event) && COMMAND_SHORTCUTS[event.code];
   if (!action) return;
-  e.preventDefault();
-  if (!e.repeat) action();
+  event.preventDefault();
+  if (!event.repeat) action();
 });

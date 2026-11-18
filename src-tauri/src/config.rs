@@ -6,14 +6,14 @@ use std::{
 use serde::{Deserialize, Serialize};
 
 const FILE_NAME: &str = "config.json";
-/// Env var the desktop session sets to "wayland" or "x11".
+/// Biến môi trường do phiên desktop đặt: "wayland" hoặc "x11".
 pub const SESSION_TYPE_ENV: &str = "XDG_SESSION_TYPE";
 const WAYLAND: &str = "wayland";
 const MACOS_DEFAULT_HOTKEY: &str = "CommandOrControl+Shift+2";
 const LINUX_DEFAULT_HOTKEY: &str = "PrintScreen";
 
-/// `<app config dir>/config.json`, edited by hand. Missing fields fall back to defaults.
-#[derive(Serialize, Deserialize, Debug, Clone)]
+/// `<thư mục config của app>/config.json`. Trường thiếu sẽ lấy giá trị mặc định.
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(default)]
 pub struct Config {
     pub hotkey: String,
@@ -30,28 +30,29 @@ pub fn default_hotkey() -> &'static str {
     if cfg!(target_os = "macos") { MACOS_DEFAULT_HOTKEY } else { LINUX_DEFAULT_HOTKEY }
 }
 
-pub fn file_path(dir: &Path) -> PathBuf {
-    dir.join(FILE_NAME)
+pub fn file_path(directory: &Path) -> PathBuf {
+    directory.join(FILE_NAME)
 }
 
-/// Missing file → defaults (first launch). Unreadable or invalid → error naming the file,
-/// so a typo in a hand edit isn't mistaken for a first launch.
-pub fn load(dir: &Path) -> Result<Config, String> {
-    let path = file_path(dir);
+/// Chưa có file → mặc định (lần chạy đầu). Đọc lỗi hoặc sai cú pháp → lỗi kèm đường dẫn,
+/// để lỗi gõ khi sửa tay không bị nhầm thành lần chạy đầu.
+pub fn load(directory: &Path) -> Result<Config, String> {
+    let path = file_path(directory);
+    let with_path = |error: &dyn std::fmt::Display| format!("{}: {error}", path.display());
     match std::fs::read_to_string(&path) {
-        Ok(text) => serde_json::from_str(&text).map_err(|e| format!("{}: {e}", path.display())),
-        Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(Config::default()),
-        Err(e) => Err(format!("{}: {e}", path.display())),
+        Ok(text) => serde_json::from_str(&text).map_err(|error| with_path(&error)),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(Config::default()),
+        Err(error) => Err(with_path(&error)),
     }
 }
 
-pub fn save(dir: &Path, c: &Config) -> io::Result<()> {
-    std::fs::create_dir_all(dir)?;
-    std::fs::write(file_path(dir), serde_json::to_string_pretty(c)?)
+pub fn save(directory: &Path, config: &Config) -> io::Result<()> {
+    std::fs::create_dir_all(directory)?;
+    std::fs::write(file_path(directory), serde_json::to_string_pretty(config)?)
 }
 
-/// The config to save after the user picked a new hotkey. A broken file gets replaced, but the
-/// replacement must not look like a first launch (that would turn autostart back on).
+/// Config cần lưu sau khi người dùng chọn phím mới. File hỏng sẽ bị thay,
+/// nhưng bản thay không được giống lần chạy đầu (sẽ bật lại autostart).
 pub fn with_hotkey(loaded: Result<Config, String>, hotkey: &str) -> Config {
     let base = loaded.unwrap_or(Config { autostart_initialized: true, ..Config::default() });
     Config { hotkey: hotkey.into(), ..base }
@@ -59,74 +60,4 @@ pub fn with_hotkey(loaded: Result<Config, String>, hotkey: &str) -> Config {
 
 pub fn is_wayland(session_type: Option<&str>) -> bool {
     session_type == Some(WAYLAND)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::path::PathBuf;
-
-    fn tmp(name: &str) -> PathBuf {
-        let d = std::env::temp_dir().join(format!("snapit-test-{name}-{}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&d);
-        d
-    }
-
-    #[test]
-    fn missing_config_gives_default() {
-        let d = tmp("missing");
-        let c = load(&d).unwrap();
-        assert_eq!(c.hotkey, default_hotkey());
-        assert!(!c.autostart_initialized);
-    }
-
-    #[test]
-    fn invalid_config_is_an_error() {
-        let d = tmp("invalid");
-        std::fs::create_dir_all(&d).unwrap();
-        std::fs::write(file_path(&d), "{oops").unwrap();
-        // a typo must not be mistaken for "first launch" (that would overwrite the file and re-enable autostart)
-        assert!(load(&d).is_err());
-    }
-
-    #[test]
-    fn partial_config_fills_defaults() {
-        let d = tmp("partial");
-        std::fs::create_dir_all(&d).unwrap();
-        std::fs::write(file_path(&d), r#"{"hotkey":"F1"}"#).unwrap();
-        let c = load(&d).unwrap();
-        assert_eq!(c.hotkey, "F1");
-        assert!(!c.autostart_initialized);
-    }
-
-    #[test]
-    fn roundtrip_creates_dir() {
-        let d = tmp("roundtrip");
-        save(&d, &Config { hotkey: "F1".into(), autostart_initialized: true }).unwrap();
-        let c = load(&d).unwrap();
-        assert_eq!(c.hotkey, "F1");
-        assert!(c.autostart_initialized);
-    }
-
-    #[test]
-    fn with_hotkey_keeps_other_settings() {
-        let c = with_hotkey(Ok(Config { hotkey: "F1".into(), autostart_initialized: false }), "F2");
-        assert_eq!(c.hotkey, "F2");
-        assert!(!c.autostart_initialized);
-    }
-
-    #[test]
-    fn with_hotkey_on_broken_file_does_not_retrigger_first_launch() {
-        // the broken file gets replaced; it must not look like a first launch (that re-enables autostart)
-        let c = with_hotkey(Err("bad".into()), "F2");
-        assert_eq!(c.hotkey, "F2");
-        assert!(c.autostart_initialized);
-    }
-
-    #[test]
-    fn wayland_detect() {
-        assert!(is_wayland(Some("wayland")));
-        assert!(!is_wayland(Some("x11")));
-        assert!(!is_wayland(None));
-    }
 }

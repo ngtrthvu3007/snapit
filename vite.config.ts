@@ -1,18 +1,18 @@
 import { defineConfig } from "vite";
-// @ts-expect-error type error without @types/node package
+// @ts-expect-error thiếu @types/node
 import process from "node:process";
 const host = process.env.TAURI_DEV_HOST;
 
-// https://vite.dev/config/
+
 export default defineConfig(() => ({
-  // one page per window type: the capture overlay and the hotkey settings
+  // mỗi loại cửa sổ một trang: overlay chụp và cài đặt phím tắt
   build: { rollupOptions: { input: { overlay: "index.html", settings: "settings.html" } } },
 
-  // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
+  // tuỳ chọn Vite cho Tauri, chỉ dùng khi `tauri dev` / `tauri build`
   //
-  // 1. prevent Vite from obscuring rust errors
+  // 1. không để Vite che lỗi Rust
   clearScreen: false,
-  // 2. tauri expects a fixed port, fail if that port is not available
+  // 2. Tauri cần cổng cố định, bận thì báo lỗi
   server: {
     port: 1420,
     strictPort: true,
@@ -25,7 +25,7 @@ export default defineConfig(() => ({
         }
       : undefined,
     watch: {
-      // 3. tell Vite to ignore watching `src-tauri`
+      // 3. Vite không theo dõi `src-tauri`
       ignored: ["**/src-tauri/**"],
     },
   },

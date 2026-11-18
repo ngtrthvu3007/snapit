@@ -1,38 +1,38 @@
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use tauri::{
-    AppHandle, Manager, WebviewUrl, WebviewWindowBuilder,
+    AppHandle, Manager, WebviewUrl, WebviewWindow, WebviewWindowBuilder,
     http::{Request, Response, StatusCode, header},
 };
 
 use crate::capture::{CaptureGuard, Shots};
 
-/// Overlay windows are labelled `overlay-<capture number>-<monitor index>`; the page reads the index
-/// from the last segment. The capture number keeps a late "destroyed" event of a previous capture's
-/// window from being mistaken for one of the current capture's.
+/// Nhãn overlay: `overlay-<lần chụp>-<số màn hình>`; trang web đọc số màn hình ở đoạn cuối.
+/// Số lần chụp giúp sự kiện "destroyed" đến muộn của lần trước không bị nhầm với lần hiện tại.
 const LABEL_PREFIX: &str = "overlay-";
-static CAPTURE_NUMBER: AtomicU64 = AtomicU64::new(0);
 const PAGE: &str = "index.html";
-/// `shot://localhost/<monitor index>` serves that monitor's frozen PNG to its overlay.
+/// `shot://localhost/<số màn hình>` trả ảnh PNG đóng băng cho overlay của màn hình đó.
 pub const SHOT_SCHEME: &str = "shot";
 const PNG_MIME: &str = "image/png";
+const ANY_ORIGIN: &str = "*";
+
+static CAPTURE_NUMBER: AtomicU64 = AtomicU64::new(0);
 
 fn is_overlay(label: &str) -> bool {
     label.starts_with(LABEL_PREFIX)
 }
 
-fn overlay_windows(app: &AppHandle) -> impl Iterator<Item = tauri::WebviewWindow> {
-    app.webview_windows().into_iter().filter(|(label, _)| is_overlay(label)).map(|(_, w)| w)
+fn overlay_windows(app: &AppHandle) -> impl Iterator<Item = WebviewWindow> {
+    app.webview_windows().into_iter().filter(|(label, _)| is_overlay(label)).map(|(_, window)| window)
 }
 
-/// One borderless, hidden overlay per captured monitor; the page shows itself once its image loaded.
-/// Must run on the main thread.
+/// Mỗi màn hình một overlay không viền, ẩn sẵn; trang tự hiện khi đã tải xong ảnh.
+/// Phải chạy trên luồng chính.
 pub fn open_overlays(app: &AppHandle) -> tauri::Result<()> {
     let capture = CAPTURE_NUMBER.fetch_add(1, Ordering::Relaxed);
     let shots = app.state::<Shots>();
-    let shots = shots.0.lock().unwrap();
-    for (i, s) in shots.iter().enumerate() {
-        let label = format!("{LABEL_PREFIX}{capture}-{i}");
+    for (index, shot) in shots.lock().iter().enumerate() {
+        let label = format!("{LABEL_PREFIX}{capture}-{index}");
         let builder = WebviewWindowBuilder::new(app, label, WebviewUrl::App(PAGE.into()))
             .decorations(false)
             .always_on_top(true)
@@ -40,72 +40,63 @@ pub fn open_overlays(app: &AppHandle) -> tauri::Result<()> {
             .resizable(false)
             .shadow(false)
             .visible_on_all_workspaces(true)
-            // with several monitors, the first drag on an unfocused overlay must not be swallowed
+            // nhiều màn hình: cú kéo đầu tiên trên overlay chưa focus không bị nuốt
             .accept_first_mouse(true)
-            .position(s.x as f64, s.y as f64)
-            .inner_size(s.width as f64, s.height as f64)
+            .position(f64::from(shot.x), f64::from(shot.y))
+            .inner_size(f64::from(shot.width), f64::from(shot.height))
             .visible(false);
-        // Wayland ignores position; fullscreen set on the builder targets the monitor at `position`
+        // Wayland bỏ qua position; fullscreen đặt trên builder sẽ nhắm đúng màn hình tại `position`
         #[cfg(target_os = "linux")]
         let builder = builder.fullscreen(true);
-        let window = builder.build()?;
+        let _window = builder.build()?;
         #[cfg(target_os = "macos")]
-        mac::raise_above_menu_bar(&window);
-        let _ = window;
+        mac::raise_above_menu_bar(&_window);
     }
     Ok(())
 }
 
-/// Closes every overlay and frees the capture so the next hotkey press works.
+/// Đóng mọi overlay và giải phóng lần chụp để phím tắt dùng lại được.
 #[tauri::command]
 pub fn close_overlays(app: AppHandle) {
-    for window in overlay_windows(&app) {
-        let _ = window.destroy();
-    }
+    overlay_windows(&app).for_each(|window| drop(window.destroy()));
     release_capture(&app);
 }
 
-/// Drops the frozen images and lets the next capture start.
+/// Bỏ ảnh đóng băng và cho phép lần chụp tiếp theo.
 pub fn release_capture(app: &AppHandle) {
-    app.state::<Shots>().0.lock().unwrap().clear();
+    app.state::<Shots>().clear();
     app.state::<CaptureGuard>().end();
 }
 
-/// Overlays closed some other way (Alt+F4, compositor): once the last one is gone, free the capture.
+/// Overlay bị đóng kiểu khác (Alt+F4, compositor): khi overlay cuối cùng mất thì giải phóng lần chụp.
 pub fn on_window_destroyed(app: &AppHandle, label: &str) {
-    if is_overlay(label) && overlay_windows(app).all(|w| w.label() == label) {
+    if is_overlay(label) && overlay_windows(app).all(|window| window.label() == label) {
         release_capture(app);
     }
 }
 
-/// Hides the overlays without ending the capture (e.g. while the save dialog is open).
+/// Ẩn overlay nhưng giữ lần chụp (ví dụ khi hộp thoại lưu đang mở).
 pub fn hide_overlays(app: &AppHandle) {
-    for window in overlay_windows(app) {
-        let _ = window.hide();
-    }
+    overlay_windows(app).for_each(|window| drop(window.hide()));
 }
 
-/// Brings hidden overlays back, focusing one so keyboard shortcuts work again.
+/// Hiện lại overlay đã ẩn, focus một cái để phím tắt hoạt động.
 pub fn show_overlays(app: &AppHandle) {
     let mut focused = false;
     for window in overlay_windows(app) {
         let _ = window.show();
-        if !focused {
-            focused = window.set_focus().is_ok();
-        }
+        focused = focused || window.set_focus().is_ok();
     }
 }
 
-/// Handler for the `shot://` scheme.
-pub fn serve_shot(app: &AppHandle, req: &Request<Vec<u8>>) -> Response<Vec<u8>> {
-    let index: Option<usize> = req.uri().path().trim_start_matches('/').parse().ok();
-    let shots = app.state::<Shots>();
-    let shots = shots.0.lock().unwrap();
-    // CORS lets the page draw the image into a canvas and still export it (an untainted canvas)
-    let res = Response::builder().header(header::ACCESS_CONTROL_ALLOW_ORIGIN, "*");
-    match index.and_then(|i| shots.get(i)) {
-        Some(s) => res.header(header::CONTENT_TYPE, PNG_MIME).body(s.png.clone()),
-        None => res.status(StatusCode::NOT_FOUND).body(Vec::new()),
+/// Xử lý scheme `shot://`.
+pub fn serve_shot(app: &AppHandle, request: &Request<Vec<u8>>) -> Response<Vec<u8>> {
+    let index: Option<usize> = request.uri().path().trim_start_matches('/').parse().ok();
+    // CORS để trang vẽ ảnh lên canvas mà vẫn xuất được (canvas không bị "tainted")
+    let response = Response::builder().header(header::ACCESS_CONTROL_ALLOW_ORIGIN, ANY_ORIGIN);
+    match index.and_then(|index| app.state::<Shots>().png(index)) {
+        Some(png) => response.header(header::CONTENT_TYPE, PNG_MIME).body(png),
+        None => response.status(StatusCode::NOT_FOUND).body(Vec::new()),
     }
     .expect("static response parts are valid")
 }
@@ -114,15 +105,15 @@ pub fn serve_shot(app: &AppHandle, req: &Request<Vec<u8>>) -> Response<Vec<u8>> 
 mod mac {
     use objc2_app_kit::{NSWindow, NSWindowCollectionBehavior};
 
-    /// NSScreenSaverWindowLevel: above the menu bar and the Dock.
+    /// NSScreenSaverWindowLevel: nằm trên menu bar và Dock.
     const ABOVE_MENU_BAR_LEVEL: isize = 1000;
 
-    pub fn raise_above_menu_bar(w: &tauri::WebviewWindow) {
-        if let Ok(ptr) = w.ns_window() {
-            // SAFETY: tauri hands out a valid NSWindow pointer; we're on the main thread
-            let ns: &NSWindow = unsafe { &*(ptr as *const NSWindow) };
-            ns.setLevel(ABOVE_MENU_BAR_LEVEL);
-            ns.setCollectionBehavior(
+    pub fn raise_above_menu_bar(window: &tauri::WebviewWindow) {
+        if let Ok(pointer) = window.ns_window() {
+            // SAFETY: tauri trả về con trỏ NSWindow hợp lệ; đang ở luồng chính
+            let ns_window: &NSWindow = unsafe { &*(pointer as *const NSWindow) };
+            ns_window.setLevel(ABOVE_MENU_BAR_LEVEL);
+            ns_window.setCollectionBehavior(
                 NSWindowCollectionBehavior::CanJoinAllSpaces | NSWindowCollectionBehavior::FullScreenAuxiliary,
             );
         }

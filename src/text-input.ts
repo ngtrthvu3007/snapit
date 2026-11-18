@@ -1,54 +1,56 @@
 import { TEXT, TOOL_WIDTH } from "./constants";
+import { CLASS, createElement } from "./dom";
 import type { Point } from "./geometry";
+import { KEY } from "./keyboard";
 
-/** A textarea floating over the canvas while the user types a text annotation. */
+/** Ô nhập chữ nổi trên canvas trong lúc gõ chú thích. */
 export class TextInput {
-  private readonly el = document.createElement("textarea");
+  private readonly element = createElement("textarea", { className: CLASS.textInput });
 
   constructor(
-    readonly at: Point,
+    readonly position: Point,
     color: string,
     onCommit: () => void,
     onCancel: () => void,
   ) {
-    const el = this.el;
-    el.className = "text-input";
-    el.wrap = "off"; // only Shift+Enter breaks lines, exactly like the committed text
-    el.rows = 1;
-    Object.assign(el.style, {
-      left: `${at.x}px`,
-      top: `${at.y}px`,
+    const element = this.element;
+    element.wrap = "off"; // chỉ Shift+Enter mới xuống dòng, giống chữ sau khi chốt
+    element.rows = 1;
+    Object.assign(element.style, {
+      left: `${position.x}px`,
+      top: `${position.y}px`,
       color,
       fontSize: `${TOOL_WIDTH.text}px`,
       fontFamily: TEXT.fontFamily,
       lineHeight: String(TEXT.lineHeight),
     });
-    el.addEventListener("keydown", (e) => {
-      e.stopPropagation(); // Esc / shortcuts while typing affect only the text box
-      if (e.key === "Escape") onCancel();
-      else if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
+    element.addEventListener("keydown", (event) => {
+      event.stopPropagation(); // Esc / phím tắt khi đang gõ chỉ tác động lên ô chữ
+      if (event.key === KEY.escape) onCancel();
+      else if (event.key === KEY.enter && !event.shiftKey) {
+        event.preventDefault();
         onCommit();
       }
     });
-    el.addEventListener("input", () => this.fitSize());
-    document.body.append(el);
-    // focus after the pointer event finishes, or the canvas click takes focus back
-    requestAnimationFrame(() => el.focus());
+    element.addEventListener("input", () => this.fitContent());
+    document.body.append(element);
+    // focus sau khi sự kiện chuột kết thúc, nếu không canvas giành lại focus
+    requestAnimationFrame(() => element.focus());
   }
 
   get value(): string {
-    return this.el.value;
+    return this.element.value;
   }
 
   remove() {
-    this.el.remove();
+    this.element.remove();
   }
 
-  /** Grows the box with its content (no wrapping, no scrollbars). */
-  private fitSize() {
-    for (const dim of ["height", "width"] as const) this.el.style[dim] = "auto";
-    this.el.style.height = `${this.el.scrollHeight}px`;
-    this.el.style.width = `${this.el.scrollWidth}px`;
+  /** Co giãn theo nội dung (không xuống dòng tự động, không thanh cuộn). */
+  private fitContent() {
+    const style = this.element.style;
+    style.width = style.height = "auto";
+    style.width = `${this.element.scrollWidth}px`;
+    style.height = `${this.element.scrollHeight}px`;
   }
 }
