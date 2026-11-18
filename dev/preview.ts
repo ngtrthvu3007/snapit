@@ -1,5 +1,6 @@
 // Chạy editor của overlay trong trình duyệt thường trên một ảnh chụp giả 2×, không cần Tauri.
 // Mở http://localhost:1420/dev/preview.html khi `npm run dev` đang chạy.
+// Thêm ?image=<đường dẫn ảnh> để dùng một ảnh thật làm "màn hình" (phủ kín, cắt giữa).
 import { SHORTCUT_CODES } from "../src/constants";
 import { Editor } from "../src/editor";
 import { hasCommandKey } from "../src/keyboard";
@@ -15,12 +16,41 @@ const FAKE_SCREEN = {
   labelPosition: { x: 80, y: 120 },
 } as const;
 
-function fakeScreenshot(): string {
+/** Canvas cỡ cửa sổ ở độ phân giải giả lập Retina. */
+function screenCanvas() {
   const ratio = FAKE_SCREEN.pixelRatio;
   const canvas = document.createElement("canvas");
   canvas.width = innerWidth * ratio;
   canvas.height = innerHeight * ratio;
-  const context = canvas.getContext("2d")!;
+  return { canvas, context: canvas.getContext("2d")!, ratio };
+}
+
+/** Ảnh thật phủ kín màn hình giả, cắt phần thừa ở giữa (giống object-fit: cover). */
+async function screenFromImage(source: string): Promise<string> {
+  const picture = new Image();
+  picture.src = source;
+  await picture.decode();
+
+  const { canvas, context } = screenCanvas();
+  const cover = Math.max(
+    canvas.width / picture.naturalWidth,
+    canvas.height / picture.naturalHeight,
+  );
+  const width = picture.naturalWidth * cover;
+  const height = picture.naturalHeight * cover;
+  context.drawImage(
+    picture,
+    (canvas.width - width) / 2,
+    (canvas.height - height) / 2,
+    width,
+    height,
+  );
+
+  return canvas.toDataURL();
+}
+
+function fakeScreenshot(): string {
+  const { canvas, context, ratio } = screenCanvas();
   const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
   FAKE_SCREEN.gradient.forEach((color, index) => gradient.addColorStop(index, color));
   context.fillStyle = gradient;
@@ -35,8 +65,10 @@ function fakeScreenshot(): string {
   return canvas.toDataURL();
 }
 
+const imageParameter = new URLSearchParams(location.search).get("image");
+
 const image = new Image();
-image.src = fakeScreenshot();
+image.src = imageParameter ? await screenFromImage(imageParameter) : fakeScreenshot();
 await image.decode();
 const canvas = document.createElement("canvas");
 document.body.append(canvas);

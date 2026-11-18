@@ -17,12 +17,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": [
-      "dmg",
-      "app",
-      "deb",
-      "appimage"
-    ],
+    "targets": ["dmg", "app", "deb", "appimage"],
     "macOS": {
       "minimumSystemVersion": "13.0",
       "signingIdentity": "-"

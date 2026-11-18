@@ -1,6 +1,6 @@
 # Snapit – Tài liệu kỹ thuật
 
-Dành cho ai sắp đọc hoặc sửa code. Cách dùng app thì xem [README](../README.md).
+Dành cho ai sắp đọc hoặc sửa code. Cách dùng app thì xem [Cách dùng](./su-dung.md).
 
 ## Tóm tắt
 
@@ -55,7 +55,8 @@ src-tauri/src/
 
 tests/                   unit test TypeScript (Vitest)
 dev/                     trang chạy thử trong trình duyệt, không cần Tauri
-docs/TESTING.md          checklist test tay trên máy thật
+docs/                    tài liệu (VitePress) — testing.md là checklist test tay
+web/index.html           trang giới thiệu viết tay
 ```
 
 ## Mấy chỗ cần biết trước khi sửa
@@ -71,7 +72,7 @@ docs/TESTING.md          checklist test tay trên máy thật
 
 ## Config
 
-`config.json` trong thư mục config của app (đường dẫn ở README):
+`config.json` trong thư mục config của app (đường dẫn ở [Gặp lỗi](./loi-thuong-gap.md)):
 
 ```json
 { "hotkey": "CommandOrControl+Shift+2", "autostart_initialized": true }
@@ -111,11 +112,11 @@ npm test                         # TypeScript
 npm run format                   # Prettier + rustfmt
 ```
 
-Phần cần phần cứng thật (chụp, clipboard, nhiều màn hình, Wayland) nằm trong [TESTING.md](TESTING.md).
+Phần cần phần cứng thật (chụp, clipboard, nhiều màn hình, Wayland) nằm trong [Checklist test tay](./testing.md).
 
 ## Ra bản mới
 
-GitHub Actions lo hết ([.github/workflows/release.yml](../.github/workflows/release.yml)):
+GitHub Actions lo hết (`.github/workflows/release.yml`):
 
 ```sh
 npm version 0.2.0          # sửa version trong package.json + tạo tag v0.2.0
@@ -137,6 +138,14 @@ npm run tauri build -- --target universal-apple-darwin  # Mac chạy cả Intel
 ```
 
 File ra ở `src-tauri/target/…/release/bundle/`. Build universal cần `rustup target add aarch64-apple-darwin x86_64-apple-darwin`.
+
+## Tài liệu & trang giới thiệu
+
+- Tài liệu là các file `.md` trong `docs/` (tiếng Việt) và `docs/en/` (tiếng Anh), VitePress render ra web. Sửa trang nào thì sửa cả hai thứ tiếng.
+- Trang giới thiệu là `web/index.html`, viết tay, không cần build; chữ tiếng Anh nằm trong đoạn script cuối file.
+- Ảnh trong tài liệu nằm ở `docs/public/images/`, chụp từ `dev/preview.html?image=…` (giao diện thật của Snapit trên một ảnh nền).
+- Xem thử: `npm run docs:dev`, còn trang giới thiệu thì mở thẳng file `web/index.html`.
+- Push lên `main` là `.github/workflows/pages.yml` build và đưa cả hai lên GitHub Pages: trang giới thiệu ở gốc, tài liệu ở `/docs/`. Lần đầu phải bật **Settings → Pages → Source: GitHub Actions** trong repo.
 
 ## Quy ước
 
