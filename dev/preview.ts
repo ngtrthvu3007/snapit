@@ -1,6 +1,7 @@
 // Browser-only harness: runs the overlay editor on a fake 2× screenshot, no Tauri needed.
 // Open http://localhost:1420/dev/preview.html while `npm run dev` runs.
 import { Editor } from "../src/editor";
+import { mountToolbar } from "../src/toolbar";
 
 const k = 2;
 const fake = document.createElement("canvas");
@@ -21,4 +22,7 @@ img.src = fake.toDataURL();
 await img.decode();
 const canvas = document.createElement("canvas");
 document.body.append(canvas);
-(window as any).editor = new Editor(canvas, img);
+const editor = new Editor(canvas, img);
+(window as any).editor = editor;
+mountToolbar(editor, () => console.log("copy"), () => console.log("save"), () => console.log("close"));
+addEventListener("keydown", (e) => (e.metaKey || e.ctrlKey) && e.key === "z" && editor.undo());
