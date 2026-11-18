@@ -1,24 +1,24 @@
-/* Cùng bảng màu với web/index.html: nền xám đen trung tính, chữ trắng ngà, màu nhấn cát (không neon). */
+/* Cùng bảng màu với web/index.html: nền than xám (không đen kịt), chữ trắng ngà, màu nhấn cát (không neon). */
 .dark {
-  --vp-c-bg: #111111;
-  --vp-c-bg-alt: #0b0b0b;
-  --vp-c-bg-soft: #1b1b1b;
-  --vp-c-bg-elv: #181818;
+  --vp-c-bg: #1e2024;
+  --vp-c-bg-alt: #191b1e;
+  --vp-c-bg-soft: #282b30;
+  --vp-c-bg-elv: #24262a;
   --vp-c-text-1: #ededed;
   --vp-c-text-2: #bdbdbd;
   --vp-c-text-3: #8a8a8a;
-  --vp-c-divider: #262626;
-  --vp-c-gutter: #0b0b0b;
-  --vp-c-border: #2e2e2e;
+  --vp-c-divider: #33363c;
+  --vp-c-gutter: #191b1e;
+  --vp-c-border: #3a3d43;
 
   --vp-c-brand-1: #e6d9b3;
   --vp-c-brand-2: #d8c896;
   --vp-c-brand-3: #c9b77d;
   --vp-c-brand-soft: rgba(230, 217, 179, 0.14);
 
-  --vp-button-brand-text: #111111;
-  --vp-button-brand-hover-text: #111111;
-  --vp-button-brand-active-text: #111111;
+  --vp-button-brand-text: #1e2024;
+  --vp-button-brand-hover-text: #1e2024;
+  --vp-button-brand-active-text: #1e2024;
 
   --vp-code-color: #e6d9b3;
   --vp-c-tip-1: #e6d9b3;
