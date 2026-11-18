@@ -12,6 +12,7 @@ use tauri::{
     menu::{CheckMenuItem, Menu, MenuItem},
     tray::TrayIconBuilder,
 };
+use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
 use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
 
@@ -42,6 +43,16 @@ pub fn trigger_capture(app: &AppHandle) {
     });
 }
 
+fn toggle_autostart(app: &AppHandle, item: &CheckMenuItem<tauri::Wry>) {
+    let al = app.autolaunch();
+    // derive from the real state, not the menu's own auto-toggled check mark
+    let want = !al.is_enabled().unwrap_or(false);
+    if let Err(e) = if want { al.enable() } else { al.disable() } {
+        show_error(app, &format!("Could not change \"Start at login\": {e}"));
+    }
+    let _ = item.set_checked(al.is_enabled().unwrap_or(false));
+}
+
 pub fn show_error(app: &AppHandle, msg: &str) {
     eprintln!("error: {msg}");
     app.dialog()
@@ -62,6 +73,7 @@ pub fn run() {
         }))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
+        .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, None))
         .manage(Shots::default())
         .manage(CaptureGuard::default())
         // shot://localhost/<monitor index> → frozen PNG for that overlay
@@ -81,24 +93,42 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
+            let cfg_dir = app.path().app_config_dir()?;
+            let mut cfg = config::load(&cfg_dir);
+            if !cfg.autostart_initialized {
+                // start at login by default, but only once: a user who turned it off keeps it off
+                if let Err(e) = app.autolaunch().enable() {
+                    eprintln!("error: enabling autostart: {e}");
+                }
+                cfg.autostart_initialized = true;
+                if let Err(e) = config::save(&cfg_dir, &cfg) {
+                    eprintln!("error: saving config: {e}");
+                }
+            }
+
             let capture = MenuItem::with_id(app, "capture", "Capture", true, None::<&str>)?;
-            let autostart =
-                CheckMenuItem::with_id(app, "autostart", "Start at login", true, false, None::<&str>)?;
+            let autostart = CheckMenuItem::with_id(
+                app,
+                "autostart",
+                "Start at login",
+                true,
+                app.autolaunch().is_enabled().unwrap_or(false),
+                None::<&str>,
+            )?;
             let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&capture, &autostart, &quit])?;
 
             TrayIconBuilder::with_id("tray")
                 .icon(app.default_window_icon().unwrap().clone())
                 .menu(&menu)
-                .on_menu_event(|app, e| match e.id.as_ref() {
+                .on_menu_event(move |app, e| match e.id.as_ref() {
                     "capture" => trigger_capture(app),
+                    "autostart" => toggle_autostart(app, &autostart),
                     "quit" => app.exit(0),
                     _ => {}
                 })
                 .build(app)?;
 
-            let cfg_dir = app.path().app_config_dir()?;
-            let cfg = config::load(&cfg_dir);
             // Wayland apps can't grab global keys; users bind `snapit --capture` in their desktop settings
             if !config::is_wayland(std::env::var("XDG_SESSION_TYPE").ok().as_deref()) {
                 app.handle().plugin(

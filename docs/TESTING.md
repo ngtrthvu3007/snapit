@@ -39,3 +39,11 @@ Verified on the company Mac (log only): `--capture` at launch, second `snapit --
 - [ ] Linux X11: PrintScreen triggers capture (GNOME/KDE may already own PrintScreen → error dialog naming the config file; change `hotkey` there).
 - [ ] **Ubuntu Wayland:** Settings → Keyboard → View and Customize Shortcuts → Custom Shortcuts → add command `snapit --capture` (full path for dev: `…/src-tauri/target/debug/snapit --capture`) bound to Print (remove GNOME's own Print binding first). Press → capture.
 - [ ] Config file: edit `hotkey` (e.g. `"F12"`), restart → new key works. Location: macOS `~/Library/Application Support/com.snapit.app/config.json`, Linux `~/.config/com.snapit.app/config.json`.
+
+## Task 7 — start at login
+
+Verified on the company Mac: first launch writes `config.json` (`autostart_initialized: true`) + `~/Library/LaunchAgents/Snapit.plist`; after removing the plist, relaunch does not re-create it.
+
+- [ ] Tray "Start at login" check mark matches reality; toggling off/on removes/creates the login item.
+- [ ] Installed `.app`: after logout/login Snapit is running in the tray. (macOS may show a "background item added" notice — expected.)
+- [ ] **Ubuntu:** `~/.config/autostart/Snapit.desktop` appears/disappears with the toggle; Snapit starts after re-login.
