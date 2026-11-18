@@ -30,3 +30,12 @@ Run with `npm run tauri dev` (stderr shows `captured N monitor(s) in …`).
 - [ ] Toolbar copy/save buttons do the same.
 - [ ] Text box still open when pressing copy → typed text is included.
 - [ ] **Ubuntu Wayland (risk 3):** after copy and overlay closed, paste still works in another app. If not → spec fallback (copy also saves to ~/Pictures + notification).
+
+## Task 6 — hotkey / --capture
+
+Verified on the company Mac (log only): `--capture` at launch, second `snapit --capture` forwarding to the running instance, ⌘⇧2 triggering capture.
+
+- [ ] Mac: the permission error appears as a visible dialog (not only in the log).
+- [ ] Linux X11: PrintScreen triggers capture (GNOME/KDE may already own PrintScreen → error dialog naming the config file; change `hotkey` there).
+- [ ] **Ubuntu Wayland:** Settings → Keyboard → View and Customize Shortcuts → Custom Shortcuts → add command `snapit --capture` (full path for dev: `…/src-tauri/target/debug/snapit --capture`) bound to Print (remove GNOME's own Print binding first). Press → capture.
+- [ ] Config file: edit `hotkey` (e.g. `"F12"`), restart → new key works. Location: macOS `~/Library/Application Support/com.snapit.app/config.json`, Linux `~/.config/com.snapit.app/config.json`.
